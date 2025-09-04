@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SUPABASE_DB_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  password  String
+  campaigns Campaign[]
+  votes     Vote[]
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Campaign {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  coverImage  String?
+  organizerId String
+  organizer   User        @relation(fields: [organizerId], references: [id])
+  categories  Category[]
+  nominees   Nominee[]
+  votes       Vote[]      // ✅ opposite side of relation
+  payments    Payment[]   // ✅ opposite side of relation
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Category {
+  id         String     @id @default(cuid())
+  name       String
+  campaignId String
+  campaign   Campaign   @relation(fields: [campaignId], references: [id])
+  nominees   Nominee[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Nominee {
+  id         String     @id @default(cuid())
+  name       String
+  bio        String?
+  image      String?
+  categoryId String
+  category   Category   @relation(fields: [categoryId], references: [id])
+  campaignId String
+  campaign   Campaign   @relation(fields: [campaignId], references: [id])
+  votes      Vote[]
+  votesCount Int        @default(0)  // ✅ Add vote count field
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Vote {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  nomineeId  String
+  nominee    Nominee   @relation(fields: [nomineeId], references: [id])
+  campaignId String
+  campaign   Campaign  @relation(fields: [campaignId], references: [id])
+  amount     Int       // stored in kobo/pesewas
+  paymentId  String?
+  payment    Payment?  @relation(fields: [paymentId], references: [id])
+  status     VoteStatus @default(PENDING)  // ✅ Add status field
+  createdAt  DateTime  @default(now())
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Int
+  reference String   @unique
+  status    PaymentStatus @default(PENDING)  // ✅ Use enum instead of String
+  method    PaymentMethod  // ✅ Add payment method field
+  campaignId String  // ✅ Add campaign reference
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  votes     Vote[]   // ✅ one-to-many (not one-to-one)
+  metadata  Json?    // ✅ Add metadata field for payment details
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ✅ Add enums for better type safety
+enum VoteStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum PaymentMethod {
+  PAYSTACK
+  NALO_USSD
+}
