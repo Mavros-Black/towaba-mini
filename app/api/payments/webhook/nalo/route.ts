@@ -30,6 +30,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
+    // First get the existing payment to preserve metadata
+    const { data: existingPayment, error: fetchError } = await supabase
+      .from('payments')
+      .select('metadata')
+      .eq('reference', payload.reference)
+      .single()
+
+    if (fetchError) {
+      console.error('Error fetching existing payment:', fetchError)
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+    }
+
     // Update payment status
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
@@ -37,7 +49,7 @@ export async function POST(request: NextRequest) {
         status: payload.status === 'SUCCESS' ? 'COMPLETED' : 'FAILED',
         updated_at: new Date().toISOString(),
         metadata: {
-          ...payment?.metadata,
+          ...existingPayment?.metadata,
           naloTransactionId: payload.transactionId,
           naloStatus: payload.status,
           naloNetwork: payload.network,
