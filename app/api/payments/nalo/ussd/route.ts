@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Create Supabase client only if environment variables are available
+const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+  : null
 
 // Nalo USSD API Configuration
 const NALO_API_BASE = 'https://api.nalosolutions.com'
@@ -26,6 +29,13 @@ interface USSDResponse {
 }
 
 export async function POST(request: NextRequest) {
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Database not configured' },
+      { status: 500 }
+    )
+  }
+  
   try {
     const body: USSDRequest = await request.json()
     const { sessionId, msisdn, userInput, network, serviceCode } = body
@@ -122,6 +132,14 @@ async function processUserInput(
 }
 
 async function showCampaigns(sessionId: string): Promise<USSDResponse> {
+  if (!supabase) {
+    return {
+      sessionId,
+      message: 'Service temporarily unavailable. Please try again later.',
+      continueSession: false
+    }
+  }
+  
   try {
     // Fetch active campaigns
     const { data: campaigns, error } = await supabase
@@ -162,6 +180,14 @@ async function showCampaigns(sessionId: string): Promise<USSDResponse> {
 }
 
 async function showNominees(sessionId: string, campaignId: string): Promise<USSDResponse> {
+  if (!supabase) {
+    return {
+      sessionId,
+      message: 'Service temporarily unavailable. Please try again later.',
+      continueSession: false
+    }
+  }
+  
   try {
     // Fetch nominees for the campaign
     const { data: nominees, error } = await supabase
@@ -208,6 +234,14 @@ async function initiatePayment(
   amount: string, 
   network: string
 ): Promise<USSDResponse> {
+  if (!supabase) {
+    return {
+      sessionId,
+      message: 'Service temporarily unavailable. Please try again later.',
+      continueSession: false
+    }
+  }
+  
   try {
     // Create payment record
     const { data: payment, error: paymentError } = await supabase
