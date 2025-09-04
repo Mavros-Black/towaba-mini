@@ -139,7 +139,7 @@ export async function GET(
         return {
           id: nominee.id,
           name: nominee.name,
-          categoryName: nominee.categories?.name || 'Unknown',
+          categoryName: nominee.categories?.[0]?.name || 'Unknown',
           hasVotes: hasNomineeVotes,
           voteCount: nomineeVotes.length,
           canDelete: !hasNomineeVotes,

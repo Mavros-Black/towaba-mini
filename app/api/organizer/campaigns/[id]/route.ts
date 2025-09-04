@@ -191,10 +191,10 @@ export async function PUT(
     // If campaign has votes, prevent certain changes
     if (hasVotes) {
       // Prevent campaign type changes
-      if (existingCampaign.campaign_type !== campaignType) {
+      if ((existingCampaign as any).campaign_type !== campaignType) {
         return NextResponse.json(
           { 
-            error: `Cannot change campaign type from "${existingCampaign.campaign_type}" to "${campaignType}" - campaign has ${votes.length} votes. Campaign structure cannot be changed once voting begins.`,
+            error: `Cannot change campaign type from "${(existingCampaign as any).campaign_type}" to "${campaignType}" - campaign has ${votes.length} votes. Campaign structure cannot be changed once voting begins.`,
             voteCount: votes.length,
             canChangeStructure: false
           },
@@ -203,7 +203,7 @@ export async function PUT(
       }
 
       // Prevent making campaign private if it was public
-      if (existingCampaign.is_public === true && !isPublic) {
+      if ((existingCampaign as any).is_public === true && !isPublic) {
         return NextResponse.json(
           { 
             error: `Cannot make campaign private - it has ${votes.length} votes. Campaign visibility cannot be changed once voting begins.`,

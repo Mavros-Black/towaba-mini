@@ -165,9 +165,9 @@ export default function CampaignsPage() {
             {campaigns.map((campaign) => (
               <Card key={campaign.id} className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <div className="aspect-video bg-muted rounded-t-lg mb-4 flex items-center justify-center">
-                  {campaign.image_url ? (
+                  {(campaign as any).image_url ? (
                     <img
-                      src={campaign.image_url}
+                      src={(campaign as any).image_url}
                       alt={campaign.title}
                       className="w-full h-full object-cover rounded-t-lg"
                     />

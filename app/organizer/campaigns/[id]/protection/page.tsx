@@ -128,9 +128,9 @@ export default function CampaignProtectionPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <DashboardSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        <DashboardSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
-          <DashboardNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          <DashboardNavbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex items-center space-x-2">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -148,9 +148,9 @@ export default function CampaignProtectionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <DashboardSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
-        <DashboardNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <DashboardNavbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
         
         <div className="p-6">
           {/* Header */}

@@ -33,7 +33,7 @@ export default function HomePage() {
               zIndex: 1
             }}
             onError={(e) => {
-              console.error('Image failed to load:', e.target.src);
+              console.error('Image failed to load:', (e.target as HTMLImageElement).src);
             }}
             onLoad={() => {
               console.log('Image loaded successfully');

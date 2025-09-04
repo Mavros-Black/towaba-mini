@@ -82,8 +82,8 @@ export async function GET(request: NextRequest) {
       method: 'PAYSTACK', // Default method since votes table doesn't have method column
       voter_name: vote.voter_name || 'Anonymous',
       created_at: vote.created_at,
-      campaign_title: vote.campaigns?.title,
-      nominee_name: vote.nominees?.name
+      campaign_title: vote.campaigns?.[0]?.title,
+      nominee_name: vote.nominees?.[0]?.name
     })) || []
 
     return NextResponse.json({
