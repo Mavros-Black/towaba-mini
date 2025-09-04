@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { X, CreditCard, Smartphone, CheckCircle } from 'lucide-react'
+import { X, CreditCard, Smartphone, CheckCircle, WifiOff } from 'lucide-react'
+import { NaloPaymentButton } from '@/components/nalo-payment-button'
 import { formatCurrency } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -239,8 +240,8 @@ export function VotingModal({ isOpen, onClose, nominee, campaign }: VotingModalP
                         disabled={isProcessing}
                         className="text-primary"
                       />
-                      <Smartphone className="w-5 h-5 text-primary" />
-                      <span className="text-foreground">USSD (Mobile Money)</span>
+                      <WifiOff className="w-5 h-5 text-primary" />
+                      <span className="text-foreground">USSD (No Internet Required)</span>
                     </label>
                   </div>
                 </div>
@@ -278,15 +279,36 @@ export function VotingModal({ isOpen, onClose, nominee, campaign }: VotingModalP
                   </div>
                 )}
 
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  className="w-full"
-                  loading={isProcessing}
-                  disabled={!voterName || !amount || !paymentMethod || isProcessing}
-                >
-                  {isProcessing ? 'Processing...' : `Vote with ${formatCurrency(parseInt(amount || '0') * 100)}`}
-                </Button>
+                {/* Nalo USSD Payment Button */}
+                {paymentMethod === 'NALO_USSD' && (
+                  <div className="mt-4">
+                    <NaloPaymentButton
+                      campaignId={campaign.id}
+                      nomineeId={nominee.id}
+                      nomineeName={nominee.name}
+                      amount={parseInt(amount || '0')}
+                      onSuccess={() => {
+                        setIsSuccess(true)
+                        toast.success('USSD payment initiated! Follow the instructions to complete.')
+                      }}
+                      onError={(error) => {
+                        toast.error(error)
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Submit Button - Only show for Paystack */}
+                {paymentMethod === 'PAYSTACK' && (
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    loading={isProcessing}
+                    disabled={!voterName || !amount || !paymentMethod || isProcessing}
+                  >
+                    {isProcessing ? 'Processing...' : `Vote with ${formatCurrency(parseInt(amount || '0') * 100)}`}
+                  </Button>
+                )}
               </form>
             ) : (
               /* Success State */
