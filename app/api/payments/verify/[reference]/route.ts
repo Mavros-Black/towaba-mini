@@ -71,7 +71,6 @@ export async function GET(
     // Verify payment with Paystack
     console.log('Calling Paystack verification API...')
     console.log('Reference being verified:', verificationReference)
-    console.log('Paystack secret key available:', !!process.env.PAYSTACK_SECRET_KEY)
     
     try {
       const verification = await paystackService.verifyPayment(verificationReference)
