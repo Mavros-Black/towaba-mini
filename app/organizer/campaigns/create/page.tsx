@@ -73,7 +73,7 @@ export default function CreateCampaignPage() {
     amountPerVote: 1,
     isPublic: true,
     allowAnonymousVoting: true,
-    maxVotesPerUser: 10,
+    maxVotesPerUser: 999999, // Effectively unlimited
     campaignType: 'categorized',
     requirePayment: true,
     paymentMethods: ['PAYSTACK'],
@@ -667,11 +667,11 @@ export default function CreateCampaignPage() {
                 min="1"
                 value={formData.maxVotesPerUser}
                 onChange={(e) => updateFormData('maxVotesPerUser', parseInt(e.target.value))}
-                placeholder="10"
+                placeholder="999999"
                 className="mt-1"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Set to 0 for unlimited votes
+                Set to a very high number (999999) for unlimited votes
               </p>
             </div>
             

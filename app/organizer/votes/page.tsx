@@ -213,6 +213,7 @@ export default function VotesPage() {
   }
 
   const getMethodIcon = (method: string) => {
+    if (!method) return '💳'
     switch (method.toLowerCase()) {
       case 'paystack': return '💳'
       case 'nalo': return '📱'

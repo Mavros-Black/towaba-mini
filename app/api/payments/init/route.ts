@@ -115,7 +115,8 @@ export async function POST(request: NextRequest) {
         amount,
         payment_id: payment.id,
         status: 'PENDING',
-        voter_name: voterName
+        voter_name: voterName,
+        voter_phone: phone || 'Unknown'
       })
       .select()
       .single()

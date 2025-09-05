@@ -13,7 +13,9 @@ import {
   LogOut, 
   Menu,
   X,
-  User
+  User,
+  DollarSign,
+  BarChart3
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -45,6 +47,18 @@ export function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarProps) {
       href: '/organizer/votes',
       icon: CreditCard,
       current: pathname === '/organizer/votes'
+    },
+    {
+      name: 'Payments',
+      href: '/organizer/payments',
+      icon: DollarSign,
+      current: pathname === '/organizer/payments'
+    },
+    {
+      name: 'Analytics & Reports',
+      href: '/organizer/analytics',
+      icon: BarChart3,
+      current: pathname === '/organizer/analytics'
     },
     {
       name: 'Settings',

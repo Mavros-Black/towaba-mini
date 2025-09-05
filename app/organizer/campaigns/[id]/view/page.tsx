@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Calendar, Users, Award, Loader2, Edit, Eye, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Calendar, Users, Award, Loader2, Edit, Eye, BarChart3, RotateCcw, History } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { DashboardWrapper } from '@/components/dashboard-wrapper'
+import VoteResetManager from '@/components/vote-reset-manager'
 import Image from 'next/image'
 
 interface Category {
@@ -50,6 +52,7 @@ interface Campaign {
 
 export default function CampaignViewPage() {
   const [campaign, setCampaign] = useState<Campaign | null>(null)
+  const [totalVotes, setTotalVotes] = useState(0)
   const [loading, setLoading] = useState(true)
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -85,11 +88,32 @@ export default function CampaignViewPage() {
         require_payment: data.campaign.require_payment
       })
       setCampaign(data.campaign)
+      
+      // Fetch total votes for this campaign
+      await fetchTotalVotes()
     } catch (error) {
       console.error('Error fetching campaign:', error)
       toast.error('Failed to fetch campaign')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTotalVotes = async () => {
+    try {
+      const response = await fetch(`/api/organizer/campaigns/${campaignId}/votes/count`, {
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setTotalVotes(data.totalVotes || 0)
+      }
+    } catch (error) {
+      console.error('Error fetching total votes:', error)
+      // Don't show error toast for vote count, just use 0
+      setTotalVotes(0)
     }
   }
 
@@ -149,6 +173,46 @@ export default function CampaignViewPage() {
             Edit Campaign
           </Button>
         </div>
+      </div>
+
+      {/* Campaign Statistics */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <BarChart3 className="w-5 h-5" />
+              <span>Campaign Statistics</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {campaign.categories.length}
+                </div>
+                <div className="text-sm text-muted-foreground">Categories</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {campaign.categories.reduce((sum, cat) => sum + cat.nominees.length, 0)}
+                </div>
+                <div className="text-sm text-muted-foreground">Total Nominees</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {campaign.require_payment !== false ? `${((campaign.amount_per_vote || 100) / 100).toFixed(2)} GHS` : 'Free'}
+                </div>
+                <div className="text-sm text-muted-foreground">Per Vote</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {totalVotes.toLocaleString()}
+                </div>
+                <div className="text-sm text-muted-foreground">Total Votes</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Campaign Info */}
@@ -336,44 +400,24 @@ export default function CampaignViewPage() {
         </div>
       </div>
 
-      {/* Campaign Statistics */}
-      <div className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <BarChart3 className="w-5 h-5" />
-              <span>Campaign Statistics</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {campaign.categories.length}
-                </div>
-                <div className="text-sm text-muted-foreground">Categories</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {campaign.categories.reduce((sum, cat) => sum + cat.nominees.length, 0)}
-                </div>
-                <div className="text-sm text-muted-foreground">Total Nominees</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {campaign.require_payment !== false ? `${((campaign.amount_per_vote || 100) / 100).toFixed(2)} GHS` : 'Free'}
-                </div>
-                <div className="text-sm text-muted-foreground">Per Vote</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {campaign.max_votes_per_user || '∞'}
-                </div>
-                <div className="text-sm text-muted-foreground">Max per User</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Vote Reset Management */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold text-foreground">Vote Management</h2>
+          <div className="flex gap-2">
+            <Link href={`/organizer/campaigns/${campaignId}/periods`}>
+              <Button variant="outline" size="sm">
+                <History className="w-4 h-4 mr-2" />
+                View Periods
+              </Button>
+            </Link>
+          </div>
+        </div>
+        
+        <VoteResetManager 
+          campaignId={campaignId} 
+          campaignTitle={campaign.title} 
+        />
       </div>
 
       {/* Categories and Nominees */}

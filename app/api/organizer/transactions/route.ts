@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Fetch all votes/payments for the user's campaigns
+    // Fetch successful votes/payments for the user's campaigns only
     const { data: votes, error: votesError } = await supabase
       .from('votes')
       .select(`
@@ -57,10 +57,11 @@ export async function GET(request: NextRequest) {
         status,
         voter_name,
         created_at,
-        nominees!inner(name),
-        campaigns!inner(title)
+        nominees(name),
+        campaigns(title)
       `)
       .in('campaign_id', campaignIds)
+      .eq('status', 'SUCCESS')
       .order('created_at', { ascending: false })
 
     if (votesError) {
@@ -71,20 +72,34 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Transform the data to match the Transaction interface
-    const transactions = votes?.map((vote: any) => ({
-      id: vote.id,
-      reference: vote.reference || `VOTE-${vote.id.slice(0, 8)}`,
-      campaign_id: vote.campaign_id,
-      nominee_id: vote.nominee_id,
-      amount: vote.amount,
-      status: vote.status,
-      method: 'PAYSTACK', // Default method since votes table doesn't have method column
-      voter_name: vote.voter_name || 'Anonymous',
-      created_at: vote.created_at,
-      campaign_title: vote.campaigns?.[0]?.title,
-      nominee_name: vote.nominees?.[0]?.name
-    })) || []
+    // Debug: Log the structure of the first vote to understand the data format
+    if (votes && votes.length > 0) {
+      console.log('Sample vote data structure:', JSON.stringify(votes[0], null, 2))
+    }
+
+    // Transform the data to match the Transaction interface with commission breakdown
+    const transactions = votes?.map((vote: any) => {
+      const amount = vote.amount || 0
+      const platformFee = Math.floor(amount * 0.15) // 15% platform fee
+      const organizerEarnings = amount - platformFee // 85% to organizer
+      
+      return {
+        id: vote.id,
+        reference: vote.reference || `VOTE-${vote.id.slice(0, 8)}`,
+        campaign_id: vote.campaign_id,
+        nominee_id: vote.nominee_id,
+        amount: amount,
+        platform_fee: platformFee,
+        organizer_earnings: organizerEarnings,
+        status: vote.status,
+        method: 'PAYSTACK', // Default method since votes table doesn't have method column
+        voter_name: vote.voter_name || 'Anonymous',
+        created_at: vote.created_at,
+        updated_at: vote.created_at,
+        campaign_title: vote.campaigns?.title || 'Unknown Campaign',
+        nominee_name: vote.nominees?.name || 'Unknown Nominee'
+      }
+    }) || []
 
     return NextResponse.json({
       transactions,

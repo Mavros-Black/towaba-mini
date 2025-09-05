@@ -99,40 +99,43 @@ export async function GET(request: Request) {
       )
     }
 
-    // Total votes (count of all successful votes) from the current user's campaigns only
-    const { count: totalVotes, error: votesError } = await supabase
+    // Total votes (sum of vote amounts based on payments) from the current user's campaigns only
+    const { data: votes, error: votesError } = await supabase
       .from('votes')
-      .select('*', { count: 'exact', head: true })
+      .select('amount')
       .eq('status', 'SUCCESS')
       .in('campaign_id', campaignIds)
 
     if (votesError) {
-      console.error('Error fetching votes count:', votesError)
+      console.error('Error fetching votes:', votesError)
       return NextResponse.json(
-        { error: 'Failed to fetch votes count' },
+        { error: 'Failed to fetch votes' },
         { status: 500 }
       )
     }
 
-    console.log('Total votes count:', totalVotes)
+    // Calculate total votes based on amount paid (amount in pesewas / 100 = votes)
+    const totalVotes = votes?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
+
+    console.log('Total votes count (based on amounts):', totalVotes)
     console.log('Campaign IDs for vote counting:', campaignIds)
 
-    // Total revenue (sum of all successful payments) from the current user's campaigns only
-    const { data: payments, error: paymentsError } = await supabase
-      .from('payments')
-      .select('amount, status')
+    // Total revenue (sum of all successful vote amounts) from the current user's campaigns only
+    const { data: revenueVotes, error: revenueError } = await supabase
+      .from('votes')
+      .select('amount')
       .eq('status', 'SUCCESS')
       .in('campaign_id', campaignIds)
 
-    if (paymentsError) {
-      console.error('Error fetching payments:', paymentsError)
+    if (revenueError) {
+      console.error('Error fetching revenue votes:', revenueError)
       return NextResponse.json(
-        { error: 'Failed to fetch payments' },
+        { error: 'Failed to fetch revenue data' },
         { status: 500 }
       )
     }
 
-    const totalRevenue = payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0
+    const totalRevenue = revenueVotes?.reduce((sum, vote) => sum + (vote.amount || 0), 0) || 0
 
     // Monthly growth (campaigns created this month vs last month)
     const now = new Date()

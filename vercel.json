@@ -17,5 +17,12 @@
     "env": {
       "NODE_ENV": "production"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/auto-reset-votes",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }
+

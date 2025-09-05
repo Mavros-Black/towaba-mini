@@ -101,7 +101,7 @@ export default function EditCampaignPage() {
     amountPerVote: 1,
     isPublic: true,
     allowAnonymousVoting: true,
-    maxVotesPerUser: 10,
+    maxVotesPerUser: 999999, // Effectively unlimited
     campaignType: 'categorized',
     requirePayment: true,
     paymentMethods: ['PAYSTACK'],
@@ -239,7 +239,7 @@ export default function EditCampaignPage() {
         amountPerVote: campaignData.amount_per_vote ? campaignData.amount_per_vote / 100 : 1, // Convert from pesewas to GHS
         isPublic: campaignData.is_public !== undefined ? campaignData.is_public : true,
         allowAnonymousVoting: campaignData.allow_anonymous_voting !== undefined ? campaignData.allow_anonymous_voting : true,
-        maxVotesPerUser: campaignData.max_votes_per_user || 10,
+        maxVotesPerUser: campaignData.max_votes_per_user || 999999, // Effectively unlimited
         campaignType: campaignData.campaign_type || 'categorized',
         requirePayment: campaignData.require_payment !== undefined ? campaignData.require_payment : true,
         paymentMethods: campaignData.payment_methods && campaignData.payment_methods.length > 0 ? campaignData.payment_methods : ['PAYSTACK'],
@@ -435,7 +435,7 @@ export default function EditCampaignPage() {
       }
 
       toast.success('Campaign updated successfully!')
-      router.push('/organizer/campaigns')
+      router.push(`/organizer/campaigns/${campaignId}/view`)
       
     } catch (error) {
       console.error('Campaign update error:', error)
@@ -847,8 +847,12 @@ export default function EditCampaignPage() {
                   min="1"
                   value={formData.maxVotesPerUser}
                   onChange={(e) => updateFormData('maxVotesPerUser', parseInt(e.target.value))}
+                  placeholder="999999"
                   className="mt-1"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Set to a very high number (999999) for unlimited votes
+                </p>
               </div>
             </CardContent>
           </Card>

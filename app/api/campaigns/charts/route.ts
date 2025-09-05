@@ -67,34 +67,36 @@ export async function GET(request: Request) {
     // Fetch data for each month
     const chartData = await Promise.all(
       months.map(async (month) => {
-        // Votes for this month (sum of nominee vote counts) from the current user's campaigns only
-        const { data: nominees, error: nomineesError } = await supabase
-          .from('nominees')
-          .select('votes_count')
-          .in('campaign_id', campaignIds)
-          .gte('created_at', month.startDate)
-          .lt('created_at', month.endDate)
-
-        if (nomineesError) {
-          console.error(`Error fetching nominees for ${month.name}:`, nomineesError)
-        }
-
-        const votes = nominees?.reduce((sum, nominee) => sum + (nominee.votes_count || 0), 0) || 0
-
-        // Revenue for this month (successful payments) from the current user's campaigns only
-        const { data: payments, error: paymentsError } = await supabase
-          .from('payments')
-          .select('amount, status')
+        // Votes for this month (sum of vote amounts based on payments) from the current user's campaigns only
+        const { data: votesData, error: votesError } = await supabase
+          .from('votes')
+          .select('amount')
           .eq('status', 'SUCCESS')
           .in('campaign_id', campaignIds)
           .gte('created_at', month.startDate)
           .lt('created_at', month.endDate)
 
-        if (paymentsError) {
-          console.error(`Error fetching payments for ${month.name}:`, paymentsError)
+        if (votesError) {
+          console.error(`Error fetching votes for ${month.name}:`, votesError)
         }
 
-        const revenue = payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0
+        // Calculate votes based on amount paid (amount in pesewas / 100 = votes)
+        const votes = votesData?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
+
+        // Revenue for this month (successful vote amounts) from the current user's campaigns only
+        const { data: revenueVotes, error: revenueError } = await supabase
+          .from('votes')
+          .select('amount')
+          .eq('status', 'SUCCESS')
+          .in('campaign_id', campaignIds)
+          .gte('created_at', month.startDate)
+          .lt('created_at', month.endDate)
+
+        if (revenueError) {
+          console.error(`Error fetching revenue votes for ${month.name}:`, revenueError)
+        }
+
+        const revenue = revenueVotes?.reduce((sum, vote) => sum + (vote.amount || 0), 0) || 0
 
         // Campaigns created this month by the current user only
         const { count: campaigns, error: campaignsError } = await supabase
@@ -117,13 +119,12 @@ export async function GET(request: Request) {
       })
     )
 
-    // Get pie chart data (top 5 campaigns by total vote counts) for the current user only
+    // Get pie chart data (top 5 campaigns by total vote amounts) for the current user only
     const { data: topCampaigns, error: pieError } = await supabase
       .from('campaigns')
       .select(`
         id,
-        title,
-        nominees!inner(votes_count)
+        title
       `)
       .eq('organizer_id', user.id)
       .order('created_at', { ascending: false })
@@ -133,14 +134,28 @@ export async function GET(request: Request) {
       console.error('Error fetching top campaigns:', pieError)
     }
 
-    const pieData = topCampaigns?.map((campaign, index) => {
-      const totalVotes = campaign.nominees?.reduce((sum, nominee) => sum + (nominee.votes_count || 0), 0) || 0
-      return {
-        name: campaign.title.length > 15 ? campaign.title.substring(0, 15) + '...' : campaign.title,
-        value: totalVotes,
-        color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
-      }
-    }) || []
+    const pieData = await Promise.all(
+      (topCampaigns || []).map(async (campaign, index) => {
+        // Get total votes for this campaign based on amounts paid
+        const { data: votesData, error: votesError } = await supabase
+          .from('votes')
+          .select('amount')
+          .eq('status', 'SUCCESS')
+          .eq('campaign_id', campaign.id)
+
+        if (votesError) {
+          console.error(`Error fetching votes for campaign ${campaign.id}:`, votesError)
+        }
+
+        const totalVotes = votesData?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
+
+        return {
+          name: campaign.title.length > 15 ? campaign.title.substring(0, 15) + '...' : campaign.title,
+          value: totalVotes,
+          color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
+        }
+      })
+    )
 
     // If no real data, provide some sample data
     if (pieData.length === 0) {

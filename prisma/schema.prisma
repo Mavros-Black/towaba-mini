@@ -56,6 +56,7 @@ model Nominee {
   campaign   Campaign   @relation(fields: [campaignId], references: [id])
   votes      Vote[]
   votesCount Int        @default(0)  // ✅ Add vote count field
+  ussdCode   String?    @unique      // ✅ Add USSD code field
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 }

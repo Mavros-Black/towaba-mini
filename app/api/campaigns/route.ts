@@ -57,13 +57,19 @@ export async function GET(request: Request) {
           .select('*', { count: 'exact', head: true })
           .eq('campaign_id', campaign.id)
 
-        // Get total vote count (sum of all nominee vote counts)
-        const { data: nominees, error: nomineesError } = await supabase
-          .from('nominees')
-          .select('votes_count')
+        // Get total vote count (sum of vote amounts based on payments)
+        const { data: votes, error: votesError } = await supabase
+          .from('votes')
+          .select('amount')
+          .eq('status', 'SUCCESS')
           .eq('campaign_id', campaign.id)
 
-        const totalVoteCount = nominees?.reduce((sum, nominee) => sum + (nominee.votes_count || 0), 0) || 0
+        if (votesError) {
+          console.error(`Error fetching votes for campaign ${campaign.id}:`, votesError)
+        }
+
+        // Calculate total votes based on amount paid (amount in pesewas / 100 = votes)
+        const totalVoteCount = votes?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
 
         return {
           ...campaign,

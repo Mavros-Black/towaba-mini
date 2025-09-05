@@ -17,11 +17,13 @@ export default function HomePage() {
       
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Nature Background */}
+        {/* Video Background */}
         <div className="absolute inset-0 -z-10">
-          <img
-            src="/images/beautiful-house-with-nature-elements.jpg"
-            alt="Beautiful house with nature elements"
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
             className="w-full h-full object-cover"
             style={{
               position: 'absolute',
@@ -33,12 +35,20 @@ export default function HomePage() {
               zIndex: 1
             }}
             onError={(e) => {
-              console.error('Image failed to load:', (e.target as HTMLImageElement).src);
+              console.error('Video failed to load:', (e.target as HTMLVideoElement).src);
             }}
-            onLoad={() => {
-              console.log('Image loaded successfully');
+            onLoadStart={() => {
+              console.log('Video started loading');
             }}
-          />
+          >
+            <source src="/video/large-thumbnail20231219-22947-3j9a9q.mp4" type="video/mp4" />
+            {/* Fallback image if video fails to load */}
+            <img
+              src="/images/beautiful-house-with-nature-elements.jpg"
+              alt="Beautiful house with nature elements"
+              className="w-full h-full object-cover"
+            />
+          </video>
           {/* Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60" style={{zIndex: 2}}></div>
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 via-transparent to-slate-900/60" style={{zIndex: 2}}></div>

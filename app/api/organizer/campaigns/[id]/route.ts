@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-auth'
+import { generateUniqueUSSDCode } from '@/lib/ussd-codes'
 
 export async function GET(
   request: NextRequest,
@@ -329,6 +330,9 @@ export async function PUT(
         }
 
         for (const nomineeData of categoryData.nominees) {
+          // Generate unique USSD code for this nominee
+          const ussdCode = await generateUniqueUSSDCode()
+          
           const { error: nomineeError } = await supabase
             .from('nominees')
             .insert({
@@ -338,6 +342,7 @@ export async function PUT(
               category_id: category.id,
               campaign_id: campaignId,
               votes_count: 0,
+              ussd_code: ussdCode,
             })
 
           if (nomineeError) {
@@ -369,6 +374,9 @@ export async function PUT(
       }
 
       for (const nomineeData of directNominees) {
+        // Generate unique USSD code for this nominee
+        const ussdCode = await generateUniqueUSSDCode()
+        
         const { error: nomineeError } = await supabase
           .from('nominees')
           .insert({
@@ -378,6 +386,7 @@ export async function PUT(
             category_id: defaultCategory.id,
             campaign_id: campaignId,
             votes_count: 0,
+            ussd_code: ussdCode,
           })
 
         if (nomineeError) {

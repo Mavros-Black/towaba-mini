@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// Extend global type for USSD sessions
+declare global {
+  var ussdSessions: Record<string, any> | undefined
+}
+
 // Create Supabase client only if environment variables are available
 const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
   ? createClient(
@@ -90,7 +95,7 @@ async function processUserInput(
   
   const input = userInput.trim()
   
-  // Check if this is a campaign selection
+  // Check if this is a menu choice
   if (input.match(/^\d+$/)) {
     const choice = parseInt(input)
     
@@ -116,6 +121,30 @@ async function processUserInput(
   if (input.startsWith('C')) {
     const campaignId = input.substring(1)
     return await showNominees(sessionId, campaignId)
+  }
+  
+  // Check if this is a campaign selection (number)
+  if (input.match(/^\d+$/) && !input.match(/^[1-4]$/)) {
+    return await processCampaignSelection(sessionId, msisdn, input, network)
+  }
+  
+  // Check if this is a nominee selection (number)
+  if (input.match(/^\d+$/) && global.ussdSessions?.[sessionId]?.step === 'nominee_selection') {
+    return await processNomineeSelection(sessionId, msisdn, input, network)
+  }
+  
+  // Check if this is a payment confirmation
+  if (input.toUpperCase() === 'Y' || input.toUpperCase() === 'YES') {
+    return await confirmPayment(sessionId, msisdn, network)
+  }
+  
+  // Check if this is a payment cancellation
+  if (input.toUpperCase() === 'N' || input.toUpperCase() === 'NO') {
+    return {
+      sessionId,
+      message: 'Payment cancelled. Thank you for using Towaba!',
+      continueSession: false
+    }
   }
   
   // Check if this is a nominee selection with payment
@@ -157,9 +186,17 @@ async function showCampaigns(sessionId: string): Promise<USSDResponse> {
       }
     }
 
+    // Store campaigns in session for selection
+    global.ussdSessions = global.ussdSessions || {}
+    global.ussdSessions[sessionId] = {
+      step: 'campaign_selection',
+      campaigns: campaigns
+    }
+
     let menu = 'Active Campaigns:\n\n'
     campaigns.forEach((campaign, index) => {
-      menu += `${index + 1}. ${campaign.title} (${campaign.amount_per_vote} GHS per vote)\n`
+      const amount = (campaign.amount_per_vote / 100).toFixed(2)
+      menu += `${index + 1}. ${campaign.title} (${amount} GHS per vote)\n`
     })
     
     menu += '\nEnter campaign number (1-' + campaigns.length + '):'
@@ -340,7 +377,7 @@ async function showResults(sessionId: string): Promise<USSDResponse> {
 async function showHelp(sessionId: string): Promise<USSDResponse> {
   const helpText = `Towaba Voting Platform Help:
 
-1. Dial ${NALO_USSD_CODE}
+1. Dial *920*123#
 2. Select "Vote for Campaign"
 3. Choose your preferred campaign
 4. Select nominee to vote for
@@ -353,5 +390,387 @@ Thank you for using Towaba!`
     sessionId,
     message: helpText,
     continueSession: false
+  }
+}
+
+// This function is not used in the traditional menu flow
+// Keeping it for potential future use
+async function processUSSDCode(
+  sessionId: string, 
+  msisdn: string, 
+  ussdCode: string, 
+  network: string
+): Promise<USSDResponse> {
+  return {
+    sessionId,
+    message: 'Direct USSD code voting is not available. Please use the menu system.',
+    continueSession: true
+  }
+}
+
+async function processCampaignSelection(
+  sessionId: string, 
+  msisdn: string, 
+  input: string, 
+  network: string
+): Promise<USSDResponse> {
+  if (!supabase) {
+    return {
+      sessionId,
+      message: 'Service temporarily unavailable. Please try again later.',
+      continueSession: false
+    }
+  }
+
+  try {
+    const sessionData = global.ussdSessions?.[sessionId]
+    if (!sessionData || sessionData.step !== 'campaign_selection') {
+      return {
+        sessionId,
+        message: 'Session expired. Please start over.',
+        continueSession: true
+      }
+    }
+
+    const campaignIndex = parseInt(input) - 1
+    const campaigns = sessionData.campaigns
+
+    if (campaignIndex < 0 || campaignIndex >= campaigns.length) {
+      return {
+        sessionId,
+        message: `Invalid selection. Please enter 1-${campaigns.length}:`,
+        continueSession: true
+      }
+    }
+
+    const selectedCampaign = campaigns[campaignIndex]
+
+    // Fetch nominees for this campaign
+    const { data: nominees, error } = await supabase
+      .from('nominees')
+      .select('id, name, bio, ussd_code')
+      .eq('campaign_id', selectedCampaign.id)
+      .limit(10)
+
+    if (error || !nominees || nominees.length === 0) {
+      return {
+        sessionId,
+        message: 'No nominees found for this campaign. Please try another campaign.',
+        continueSession: true
+      }
+    }
+
+    // Update session with selected campaign and nominees
+    if (!global.ussdSessions) {
+      global.ussdSessions = {}
+    }
+    global.ussdSessions[sessionId] = {
+      ...sessionData,
+      step: 'nominee_selection',
+      selectedCampaign,
+      nominees
+    }
+
+    let message = `Nominees for ${selectedCampaign.title}:\n\n`
+    nominees.forEach((nominee, index) => {
+      message += `${index + 1}. ${nominee.name}\n`
+      if (nominee.bio) {
+        message += `   ${nominee.bio.substring(0, 30)}${nominee.bio.length > 30 ? '...' : ''}\n`
+      }
+    })
+    message += '\nEnter nominee number to vote:'
+
+    return {
+      sessionId,
+      message,
+      continueSession: true
+    }
+
+  } catch (error) {
+    console.error('Error processing campaign selection:', error)
+    return {
+      sessionId,
+      message: 'An error occurred. Please try again.',
+      continueSession: false
+    }
+  }
+}
+
+async function processNomineeSelection(
+  sessionId: string, 
+  msisdn: string, 
+  input: string, 
+  network: string
+): Promise<USSDResponse> {
+  try {
+    const sessionData = global.ussdSessions?.[sessionId]
+    if (!sessionData || sessionData.step !== 'nominee_selection') {
+      return {
+        sessionId,
+        message: 'Session expired. Please start over.',
+        continueSession: true
+      }
+    }
+
+    const nomineeIndex = parseInt(input) - 1
+    const nominees = sessionData.nominees
+    const selectedCampaign = sessionData.selectedCampaign
+
+    if (nomineeIndex < 0 || nomineeIndex >= nominees.length) {
+      return {
+        sessionId,
+        message: `Invalid selection. Please enter 1-${nominees.length}:`,
+        continueSession: true
+      }
+    }
+
+    const selectedNominee = nominees[nomineeIndex]
+    const amount = selectedCampaign.amount_per_vote
+    const amountInCedis = (amount / 100).toFixed(2)
+
+    // Update session with selected nominee
+    if (!global.ussdSessions) {
+      global.ussdSessions = {}
+    }
+    global.ussdSessions[sessionId] = {
+      ...sessionData,
+      step: 'payment_confirmation',
+      selectedNominee,
+      amount
+    }
+
+    const confirmationMessage = `Payment Details:
+
+Nominee: ${selectedNominee.name}
+Amount: ${amountInCedis} GHS
+Campaign: ${selectedCampaign.title}
+
+Confirm payment? (Y/N):`
+
+    return {
+      sessionId,
+      message: confirmationMessage,
+      continueSession: true
+    }
+
+  } catch (error) {
+    console.error('Error processing nominee selection:', error)
+    return {
+      sessionId,
+      message: 'An error occurred. Please try again.',
+      continueSession: false
+    }
+  }
+}
+
+async function processAmountInput(
+  sessionId: string, 
+  msisdn: string, 
+  amountInput: string, 
+  network: string
+): Promise<USSDResponse> {
+  try {
+    // Get session data
+    const sessionData = global.ussdSessions?.[sessionId]
+    if (!sessionData) {
+      return {
+        sessionId,
+        message: '❌ Session expired. Please start over by entering a nominee code.',
+        continueSession: true
+      }
+    }
+
+    const { nominee, ussdCode } = sessionData
+    const amountPerVote = nominee.campaign.amount_per_vote
+    const amountPerVoteInCedis = (amountPerVote / 100).toFixed(2)
+
+    // Parse the amount
+    const amount = parseFloat(amountInput)
+    if (isNaN(amount) || amount <= 0) {
+      return {
+        sessionId,
+        message: `❌ Invalid amount: ${amountInput}
+
+Please enter a valid amount (e.g., 1.00, 5.00):
+Amount per vote: GHS ${amountPerVoteInCedis}`,
+        continueSession: true
+      }
+    }
+
+    // Calculate number of votes
+    const numberOfVotes = Math.floor(amount / (amountPerVote / 100))
+    const totalAmount = numberOfVotes * amountPerVote
+    const totalAmountInCedis = (totalAmount / 100).toFixed(2)
+
+    if (numberOfVotes === 0) {
+      return {
+        sessionId,
+        message: `❌ Amount too low!
+
+Minimum amount: GHS ${amountPerVoteInCedis} (1 vote)
+You entered: GHS ${amount.toFixed(2)}
+
+Please enter a higher amount:`,
+        continueSession: true
+      }
+    }
+
+    // Update session with amount info
+    if (!global.ussdSessions) {
+      global.ussdSessions = {}
+    }
+    global.ussdSessions[sessionId] = {
+      ...sessionData,
+      amount: totalAmount,
+      numberOfVotes,
+      amountInput: amount
+    }
+
+    // Show confirmation
+    const confirmationMessage = `📋 Vote Summary
+
+Nominee: ${nominee.name}
+Campaign: ${nominee.campaign.title}
+Amount: GHS ${amount.toFixed(2)}
+Votes: ${numberOfVotes} vote${numberOfVotes > 1 ? 's' : ''}
+Total: GHS ${totalAmountInCedis}
+
+Confirm vote? (YES/NO):`
+
+    return {
+      sessionId,
+      message: confirmationMessage,
+      continueSession: true
+    }
+
+  } catch (error) {
+    console.error('Error processing amount input:', error)
+    return {
+      sessionId,
+      message: '❌ An error occurred. Please try again.',
+      continueSession: false
+    }
+  }
+}
+
+async function confirmPayment(
+  sessionId: string, 
+  msisdn: string, 
+  network: string
+): Promise<USSDResponse> {
+  if (!supabase) {
+    return {
+      sessionId,
+      message: 'Service temporarily unavailable. Please try again later.',
+      continueSession: false
+    }
+  }
+
+  try {
+    // Get session data
+    const sessionData = global.ussdSessions?.[sessionId]
+    if (!sessionData || sessionData.step !== 'payment_confirmation') {
+      return {
+        sessionId,
+        message: 'Session expired. Please start over.',
+        continueSession: true
+      }
+    }
+
+    const { selectedNominee, selectedCampaign, amount } = sessionData
+
+    // Create payment record
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        user_id: null, // Anonymous user for USSD voting
+        amount: amount,
+        reference: `NALO-${Date.now()}-${selectedNominee.ussd_code || 'vote'}`,
+        status: 'SUCCESS', // Mark as success for USSD voting
+        method: 'NALO_USSD',
+        campaign_id: selectedCampaign.id,
+        metadata: {
+          nominee_id: selectedNominee.id,
+          nominee_name: selectedNominee.name,
+          network: network,
+          msisdn: msisdn,
+          session_id: sessionId,
+          ussd_code: selectedNominee.ussd_code
+        }
+      })
+      .select()
+      .single()
+
+    if (paymentError) {
+      console.error('Payment creation error:', paymentError)
+      return {
+        sessionId,
+        message: '❌ Payment Failed\n\nYour payment could not be processed. Please try again.\n\nReference: NALO-' + Date.now(),
+        continueSession: false
+      }
+    }
+
+    // Create vote record
+    const { error: voteError } = await supabase
+      .from('votes')
+      .insert({
+        user_id: null, // Anonymous user
+        nominee_id: selectedNominee.id,
+        campaign_id: selectedCampaign.id,
+        amount: amount,
+        payment_id: payment.id,
+        status: 'SUCCESS'
+      })
+
+    if (voteError) {
+      console.error('Vote creation error:', voteError)
+      return {
+        sessionId,
+        message: '❌ Failed to record vote. Please try again.',
+        continueSession: false
+      }
+    }
+
+    // Update nominee vote count
+    const { data: currentNominee } = await supabase
+      .from('nominees')
+      .select('votes_count')
+      .eq('id', selectedNominee.id)
+      .single()
+    
+    if (currentNominee) {
+      await supabase
+        .from('nominees')
+        .update({ votes_count: currentNominee.votes_count + 1 })
+        .eq('id', selectedNominee.id)
+    }
+
+    // Clear session data
+    if (global.ussdSessions) {
+      delete global.ussdSessions[sessionId]
+    }
+
+    const amountInCedis = (amount / 100).toFixed(2)
+
+    return {
+      sessionId,
+      message: `✅ Payment Successful!
+
+Your vote for ${selectedNominee.name} has been recorded successfully.
+
+Reference: ${payment.reference}
+Amount: ${amountInCedis} GHS
+
+Thank you for voting with Towaba!`,
+      continueSession: false
+    }
+
+  } catch (error) {
+    console.error('Error confirming payment:', error)
+    return {
+      sessionId,
+      message: '❌ An error occurred while processing your payment. Please try again later.',
+      continueSession: false
+    }
   }
 }
