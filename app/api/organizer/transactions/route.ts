@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const campaignIds = userCampaigns?.map(c => c.id) || []
+    const campaignIds = userCampaigns?.map((c: any) => c.id) || []
     
     if (campaignIds.length === 0) {
       return NextResponse.json({
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data to match the Transaction interface
-    const transactions = votes?.map(vote => ({
+    const transactions = votes?.map((vote: any) => ({
       id: vote.id,
       reference: vote.reference || `VOTE-${vote.id.slice(0, 8)}`,
       campaign_id: vote.campaign_id,

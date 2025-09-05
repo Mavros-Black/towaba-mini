@@ -16,7 +16,7 @@ export default function HomePage() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-40 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[90vh]">
+      <section className="relative h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Nature Background */}
         <div className="absolute inset-0 -z-10">
           <img
@@ -88,7 +88,7 @@ export default function HomePage() {
               <Link href="/campaigns">
                 <Button 
                   size="lg" 
-                  className="text-lg px-12 py-6 bg-gradient-to-r from-slate-800/90 to-slate-900/90 hover:from-slate-700/90 hover:to-slate-800/90 text-amber-300 shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 transform hover:scale-105 border border-amber-400/30 rounded-2xl font-semibold backdrop-blur-md"
+                  className="text-lg px-12 py-6 bg-gradient-to-r from-slate-800/90 to-slate-900/90 hover:from-slate-700/90 hover:to-slate-800/90 text-amber-300 shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 transform hover:scale-105 border border-amber-400/30 rounded-lg font-semibold backdrop-blur-md"
                 >
                   <Award className="w-5 h-5 mr-2" />
                   Browse Campaigns
@@ -98,7 +98,7 @@ export default function HomePage() {
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="text-lg px-12 py-6 border-2 border-white/50 dark:border-slate-300/50 text-white dark:text-slate-200 hover:bg-white/10 dark:hover:bg-slate-700/20 backdrop-blur-md transition-all duration-300 transform hover:scale-105 rounded-2xl font-semibold"
+                  className="text-lg px-12 py-6 border-2 border-white/50 dark:border-slate-300/50 text-slate-800 dark:text-slate-200 hover:bg-white/10 dark:hover:bg-slate-700/20 backdrop-blur-md transition-all duration-300 transform hover:scale-105 rounded-lg font-semibold"
                 >
                   <Heart className="w-5 h-5 mr-2" />
                   Learn How
@@ -107,6 +107,59 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
         </div>
+
+        {/* Scroll Down Indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.8 }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20"
+        >
+          <motion.div
+            animate={{ 
+              y: [0, 10, 0],
+              opacity: [0.7, 1, 0.7]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="flex flex-col items-center cursor-pointer group"
+            onClick={() => {
+              const featuresSection = document.querySelector('section:nth-of-type(2)');
+              featuresSection?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <div className="w-6 h-10 border-2 border-white/60 dark:border-slate-300/60 rounded-full flex justify-center group-hover:border-amber-400/80 transition-colors duration-300">
+              <motion.div
+                animate={{ 
+                  y: [0, 12, 0],
+                  opacity: [0.8, 1, 0.8]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="w-1 h-3 bg-white/80 dark:bg-slate-300/80 rounded-full mt-2 group-hover:bg-amber-400/90 transition-colors duration-300"
+              />
+            </div>
+            <motion.p
+              animate={{ 
+                opacity: [0.6, 1, 0.6]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="text-white/70 dark:text-slate-300/70 text-sm mt-2 font-medium group-hover:text-amber-300/90 transition-colors duration-300"
+            >
+              Scroll down
+            </motion.p>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
@@ -136,33 +189,37 @@ export default function HomePage() {
                 icon: Shield,
                 title: 'Secure Voting',
                 description: 'Advanced encryption and blockchain technology ensure every vote is secure and tamper-proof.',
-                color: 'from-blue-600 to-slate-700',
-                bgColor: 'from-blue-500/20 to-slate-500/20',
+                iconColor: 'text-blue-600 dark:text-blue-400',
+                bgColor: 'from-blue-500/20 to-blue-600/20',
                 borderColor: 'border-blue-500/30',
+                hoverBgColor: 'group-hover:from-blue-500/30 group-hover:to-blue-600/30',
               },
               {
                 icon: Users,
                 title: 'Community Driven',
                 description: 'Connect with like-minded individuals and support your favorites in a vibrant community.',
-                color: 'from-slate-600 to-slate-800',
+                iconColor: 'text-slate-600 dark:text-slate-400',
                 bgColor: 'from-slate-500/20 to-slate-600/20',
                 borderColor: 'border-slate-500/30',
+                hoverBgColor: 'group-hover:from-slate-500/30 group-hover:to-slate-600/30',
               },
               {
                 icon: Calendar,
                 title: 'Event Management',
                 description: 'Comprehensive tools for organizers to create, manage, and track successful campaigns.',
-                color: 'from-amber-600 to-yellow-700',
-                bgColor: 'from-amber-500/20 to-yellow-500/20',
+                iconColor: 'text-amber-600 dark:text-amber-400',
+                bgColor: 'from-amber-500/20 to-amber-600/20',
                 borderColor: 'border-amber-500/30',
+                hoverBgColor: 'group-hover:from-amber-500/30 group-hover:to-amber-600/30',
               },
               {
                 icon: Zap,
                 title: 'Lightning Fast',
                 description: 'Real-time updates and instant results with our high-performance infrastructure.',
-                color: 'from-blue-700 to-slate-800',
-                bgColor: 'from-blue-500/20 to-slate-500/20',
-                borderColor: 'border-blue-500/30',
+                iconColor: 'text-blue-700 dark:text-blue-300',
+                bgColor: 'from-blue-600/20 to-blue-700/20',
+                borderColor: 'border-blue-600/30',
+                hoverBgColor: 'group-hover:from-blue-600/30 group-hover:to-blue-700/30',
               },
             ].map((feature, index) => (
               <motion.div
@@ -177,10 +234,10 @@ export default function HomePage() {
                 <Card className={`h-full text-center hover:shadow-2xl transition-all duration-500 border ${feature.borderColor} bg-slate-100/30 dark:bg-slate-800/30 backdrop-blur-xl group-hover:bg-slate-200/40 dark:group-hover:bg-slate-700/40 rounded-3xl overflow-hidden`}>
                   <CardHeader className="pb-6 pt-8">
                     <motion.div 
-                      className={`mx-auto w-20 h-20 bg-gradient-to-r ${feature.bgColor} backdrop-blur-sm rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-slate-300/30 dark:border-slate-600/30`}
+                      className={`mx-auto w-20 h-20 bg-gradient-to-r ${feature.bgColor} ${feature.hoverBgColor} backdrop-blur-sm rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 border border-slate-300/30 dark:border-slate-600/30 shadow-lg`}
                       whileHover={{ rotate: 10 }}
                     >
-                      <feature.icon className={`w-10 h-10 bg-gradient-to-r ${feature.color} bg-clip-text text-transparent`} />
+                      <feature.icon className={`w-10 h-10 ${feature.iconColor} drop-shadow-sm`} />
                     </motion.div>
                     <CardTitle className="text-xl font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">
                       {feature.title}
@@ -253,7 +310,7 @@ export default function HomePage() {
               <Link href="/campaigns">
                 <Button 
                   size="lg" 
-                  className="text-lg px-16 py-8 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-amber-400 shadow-2xl hover:shadow-slate-500/25 transition-all duration-300 transform hover:scale-105 border border-amber-400/20 rounded-3xl font-bold"
+                  className="text-lg px-16 py-8 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-amber-400 shadow-2xl hover:shadow-slate-500/25 transition-all duration-300 transform hover:scale-105 border border-amber-400/20 rounded-lg font-bold"
                 >
                   <Award className="w-6 h-6 mr-3" />
                   Get Started Now
@@ -263,7 +320,7 @@ export default function HomePage() {
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="text-lg px-16 py-8 border-2 border-slate-400 dark:border-slate-500 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/20 backdrop-blur-md transition-all duration-300 transform hover:scale-105 rounded-3xl font-bold"
+                  className="text-lg px-16 py-8 border-2 border-slate-400 dark:border-slate-500 text-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/20 backdrop-blur-md transition-all duration-300 transform hover:scale-105 rounded-lg font-bold"
                 >
                   <Heart className="w-6 h-6 mr-3" />
                   Contact Us

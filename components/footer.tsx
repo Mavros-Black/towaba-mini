@@ -38,7 +38,7 @@ export function Footer() {
   return (
     <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-200 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-slate-400/10 via-transparent to-transparent"></div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Section */}
           <div className="lg:col-span-2">
@@ -51,30 +51,30 @@ export function Footer() {
               <h3 className="text-3xl font-black mb-6 bg-gradient-to-r from-slate-200 via-slate-100 to-amber-400 bg-clip-text text-transparent">
                 Towaba
               </h3>
-              <p className="text-slate-300 mb-8 leading-relaxed text-lg">
+              <p className="text-slate-300 mb-6 leading-relaxed text-lg">
                 The most trusted voting platform for events, campaigns, and community decisions. 
                 Secure, transparent, and designed for the modern world.
               </p>
               
               {/* Contact Info */}
-              <div className="space-y-4">
-                <div className="flex items-center text-slate-300 hover:text-slate-100 transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-r from-slate-600/30 to-slate-700/30 rounded-xl flex items-center justify-center mr-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex flex-col items-center text-center text-slate-300 hover:text-slate-100 transition-colors">
+                  <div className="w-10 h-10 bg-gradient-to-r from-slate-600/30 to-slate-700/30 rounded-lg flex items-center justify-center mb-2">
                     <Mail className="w-5 h-5 text-slate-300" />
                   </div>
-                  <span>hello@towaba.com</span>
+                  <span className="text-sm">hello@towaba.com</span>
                 </div>
-                <div className="flex items-center text-slate-300 hover:text-slate-100 transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600/30 to-slate-700/30 rounded-xl flex items-center justify-center mr-4">
+                <div className="flex flex-col items-center text-center text-slate-300 hover:text-slate-100 transition-colors">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600/30 to-slate-700/30 rounded-lg flex items-center justify-center mb-2">
                     <Phone className="w-5 h-5 text-blue-300" />
                   </div>
-                  <span>+233 24 123 4567</span>
+                  <span className="text-sm">+233 24 123 4567</span>
                 </div>
-                <div className="flex items-center text-slate-300 hover:text-slate-100 transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-r from-amber-500/30 to-yellow-500/30 rounded-xl flex items-center justify-center mr-4">
+                <div className="flex flex-col items-center text-center text-slate-300 hover:text-slate-100 transition-colors">
+                  <div className="w-10 h-10 bg-gradient-to-r from-amber-500/30 to-yellow-500/30 rounded-lg flex items-center justify-center mb-2">
                     <MapPin className="w-5 h-5 text-amber-400" />
                   </div>
-                  <span>Accra, Ghana</span>
+                  <span className="text-sm">Accra, Ghana</span>
                 </div>
               </div>
             </motion.div>
@@ -159,7 +159,7 @@ export function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           viewport={{ once: true }}
-          className="mt-12 pt-8 border-t border-slate-600"
+          className="mt-8 pt-6 border-t border-slate-600"
         >
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex space-x-6 mb-4 md:mb-0">

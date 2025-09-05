@@ -39,7 +39,7 @@ export function Navigation() {
   }, [])
 
   return (
-    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/10 dark:bg-slate-900/10 backdrop-blur-xl border border-slate-200/20 dark:border-slate-700/20 shadow-lg rounded-2xl w-[80%] max-w-6xl">
+    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/30 dark:border-slate-700/30 shadow-lg rounded-2xl w-[80%] max-w-6xl">
       <div className="px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -51,7 +51,7 @@ export function Navigation() {
               >
                 <span className="text-amber-400 font-black text-xl">T</span>
               </motion.div>
-              <span className="text-2xl font-black text-white">
+              <span className="text-2xl font-black text-slate-800 dark:text-white">
                 Towaba
               </span>
             </Link>
@@ -66,8 +66,8 @@ export function Navigation() {
                   href={item.href}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
                     pathname === item.href
-                      ? 'text-white bg-white/20 backdrop-blur-sm shadow-lg'
-                      : 'text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                      ? 'text-slate-800 dark:text-white bg-slate-200/30 dark:bg-white/20 backdrop-blur-sm'
+                      : 'text-slate-600 dark:text-white/80 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100/20 dark:hover:bg-white/10 backdrop-blur-sm'
                   }`}
                 >
                   {item.name}
@@ -97,11 +97,11 @@ export function Navigation() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-full mt-2 w-48 bg-white/10 dark:bg-slate-900/10 backdrop-blur-xl border border-slate-200/20 dark:border-slate-700/20 rounded-2xl shadow-lg py-2"
+                    className="absolute right-0 top-full mt-2 w-48 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/30 dark:border-slate-700/30 rounded-2xl shadow-lg py-2"
                   >
                     <Link
                       href="/organizer/dashboard"
-                      className="block px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors"
+                      className="block px-4 py-3 text-sm text-slate-800 dark:text-white hover:bg-slate-100/20 dark:hover:bg-white/10 transition-colors"
                       onClick={() => setUserDropdownOpen(false)}
                     >
                       Dashboard
@@ -111,7 +111,7 @@ export function Navigation() {
                         signOut()
                         setUserDropdownOpen(false)
                       }}
-                      className="block w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors"
+                      className="block w-full text-left px-4 py-3 text-sm text-slate-800 dark:text-white hover:bg-slate-100/20 dark:hover:bg-white/10 transition-colors"
                     >
                       Sign Out
                     </button>
@@ -123,7 +123,7 @@ export function Navigation() {
                 <Link href="/organizer/register">
                   <Button 
                     variant="outline"
-                    className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:text-white transition-all duration-300 rounded-xl"
+                    className="bg-slate-100/20 dark:bg-white/10 hover:bg-slate-200/30 dark:hover:bg-white/20 backdrop-blur-sm border border-slate-300/50 dark:border-white/30 text-slate-700 dark:text-white hover:text-slate-800 dark:hover:text-white transition-all duration-300 rounded-xl"
                   >
                     Become Organizer
                   </Button>
@@ -159,7 +159,7 @@ export function Navigation() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden absolute top-full left-0 right-0 mt-2 border border-slate-200/20 dark:border-slate-700/20 bg-white/10 dark:bg-slate-900/10 backdrop-blur-xl rounded-2xl shadow-lg"
+          className="md:hidden absolute top-full left-0 right-0 mt-2 border border-slate-200/20 dark:border-slate-700/20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-lg"
         >
           <div className="px-4 pt-4 pb-6 space-y-2">
             {navigation.map((item) => (
@@ -168,7 +168,7 @@ export function Navigation() {
                 href={item.href}
                 className={`block px-4 py-3 rounded-xl text-base font-semibold transition-all duration-300 ${
                   pathname === item.href
-                    ? 'text-slate-800 dark:text-slate-200 bg-slate-200/30 dark:bg-slate-700/30 backdrop-blur-sm shadow-lg'
+                    ? 'text-slate-800 dark:text-slate-200 bg-slate-200/30 dark:bg-slate-700/30 backdrop-blur-sm'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100/20 dark:hover:bg-slate-700/20 backdrop-blur-sm'
                 }`}
                 onClick={() => setMobileMenuOpen(false)}

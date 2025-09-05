@@ -87,8 +87,8 @@ export async function GET(
     }
 
     // Check which nominees have votes
-    const nomineesWithVotes = nominees?.filter(nominee => {
-      const nomineeVotes = votes?.filter(vote => vote.nominee_id === nominee.id) || []
+    const nomineesWithVotes = nominees?.filter((nominee: any) => {
+      const nomineeVotes = votes?.filter((vote: any) => vote.nominee_id === nominee.id) || []
       return nomineeVotes.length > 0
     }) || []
 
@@ -111,10 +111,10 @@ export async function GET(
     }
 
     // Check which categories have votes
-    const categoriesWithVotes = categories?.filter(category => {
-      const categoryNominees = nominees?.filter(nominee => nominee.category_id === category.id) || []
-      const categoryVotes = votes?.filter(vote => 
-        categoryNominees.some(nominee => nominee.id === vote.nominee_id)
+    const categoriesWithVotes = categories?.filter((category: any) => {
+      const categoryNominees = nominees?.filter((nominee: any) => nominee.category_id === category.id) || []
+      const categoryVotes = votes?.filter((vote: any) => 
+        categoryNominees.some((nominee: any) => nominee.id === vote.nominee_id)
       ) || []
       return categoryVotes.length > 0
     }) || []
@@ -132,8 +132,8 @@ export async function GET(
           ? `Campaign has ${voteCount} votes` 
           : 'No votes - safe to modify'
       },
-      nominees: nominees?.map(nominee => {
-        const nomineeVotes = votes?.filter(vote => vote.nominee_id === nominee.id) || []
+      nominees: nominees?.map((nominee: any) => {
+        const nomineeVotes = votes?.filter((vote: any) => vote.nominee_id === nominee.id) || []
         const hasNomineeVotes = nomineeVotes.length > 0
         
         return {
@@ -148,10 +148,10 @@ export async function GET(
             : 'No votes - safe to delete'
         }
       }) || [],
-      categories: categories?.map(category => {
-        const categoryNominees = nominees?.filter(nominee => nominee.category_id === category.id) || []
-        const categoryVotes = votes?.filter(vote => 
-          categoryNominees.some(nominee => nominee.id === vote.nominee_id)
+      categories: categories?.map((category: any) => {
+        const categoryNominees = nominees?.filter((nominee: any) => nominee.category_id === category.id) || []
+        const categoryVotes = votes?.filter((vote: any) => 
+          categoryNominees.some((nominee: any) => nominee.id === vote.nominee_id)
         ) || []
         const hasCategoryVotes = categoryVotes.length > 0
         

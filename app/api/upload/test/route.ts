@@ -14,12 +14,12 @@ export async function GET() {
     }
 
     // Check if campaign-images bucket exists
-    const campaignImagesBucket = buckets.find(bucket => bucket.id === 'campaign-images')
+    const campaignImagesBucket = buckets.find((bucket: any) => bucket.id === 'campaign-images')
     
     if (!campaignImagesBucket) {
       return NextResponse.json({
         error: 'campaign-images bucket not found',
-        availableBuckets: buckets.map(b => b.id),
+        availableBuckets: buckets.map((b: any) => b.id),
         message: 'Run the setup-storage.sql script in Supabase SQL Editor'
       }, { status: 404 })
     }

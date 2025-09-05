@@ -95,7 +95,7 @@ export default function ContactPage() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="pt-24 pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -133,7 +133,7 @@ export default function ContactPage() {
                       className={`mx-auto w-16 h-16 bg-gradient-to-r ${info.bgColor} rounded-2xl flex items-center justify-center mb-4`}
                       whileHover={{ rotate: 5, scale: 1.1 }}
                     >
-                      <info.icon className={`w-8 h-8 bg-gradient-to-r ${info.color} bg-clip-text text-transparent`} />
+                      <info.icon className={`w-8 h-8 text-blue-600 dark:text-blue-400`} />
                     </motion.div>
                     <CardTitle className="text-lg font-bold text-slate-800 dark:text-slate-200">
                       {info.title}
@@ -178,8 +178,8 @@ export default function ContactPage() {
                     className="text-center py-12"
                   >
                     <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-gray-800 mb-2">Message Sent!</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">Message Sent!</h3>
+                    <p className="text-slate-600 dark:text-slate-300">
                       Thank you for contacting us. We'll get back to you within 24 hours.
                     </p>
                   </motion.div>
@@ -254,7 +254,7 @@ export default function ContactPage() {
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="px-12 py-6 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-amber-400 shadow-2xl hover:shadow-slate-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-semibold border border-amber-400/20"
+                        className="px-12 py-6 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-amber-400 shadow-2xl hover:shadow-slate-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold border border-amber-400/20"
                       >
                         {isSubmitting ? (
                           <>

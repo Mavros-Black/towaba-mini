@@ -88,7 +88,7 @@ export default function CampaignsPage() {
         <div className="relative mb-12 overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-800"></div>
           <div className="absolute inset-0 bg-black/20"></div>
-          <div className="relative px-8 py-16 text-center text-white">
+          <div className="relative px-8 py-20 text-center text-white">
             <h1 className="text-5xl font-bold tracking-tight mb-4">Campaigns</h1>
             <p className="text-xl text-blue-100 max-w-2xl mx-auto">
               Discover and participate in exciting voting campaigns from around the world

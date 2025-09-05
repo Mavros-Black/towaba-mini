@@ -281,7 +281,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch counts for each campaign
     const campaignsWithCounts = await Promise.all(
-      campaigns?.map(async (campaign) => {
+      campaigns?.map(async (campaign: any) => {
         // Get categories count
         const { count: categoriesCount } = await supabase
           .from('categories')

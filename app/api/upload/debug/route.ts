@@ -53,15 +53,15 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log('Available buckets:', buckets.map(b => b.id))
+    console.log('Available buckets:', buckets.map((b: any) => b.id))
 
-    const campaignImagesBucket = buckets.find(bucket => bucket.id === 'campaign-images')
+    const campaignImagesBucket = buckets.find((bucket: any) => bucket.id === 'campaign-images')
     
     if (!campaignImagesBucket) {
       return NextResponse.json({
         error: 'campaign-images bucket not found',
         step: 'bucket_check',
-        availableBuckets: buckets.map(b => b.id),
+        availableBuckets: buckets.map((b: any) => b.id),
         message: 'Run the storage setup script in Supabase SQL Editor'
       }, { status: 404 })
     }

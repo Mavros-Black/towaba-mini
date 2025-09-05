@@ -23,7 +23,7 @@ export default function FAQPage() {
       icon: Users,
       title: 'Getting Started',
       color: 'from-blue-500 to-indigo-600',
-      bgColor: 'from-blue-50 to-indigo-50',
+      bgColor: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20',
       questions: [
         {
           question: 'How do I create an account?',
@@ -47,7 +47,7 @@ export default function FAQPage() {
       icon: Shield,
       title: 'Security & Privacy',
       color: 'from-green-500 to-emerald-600',
-      bgColor: 'from-green-50 to-emerald-50',
+      bgColor: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
       questions: [
         {
           question: 'How secure is my voting data?',
@@ -71,7 +71,7 @@ export default function FAQPage() {
       icon: CreditCard,
       title: 'Payments & Billing',
       color: 'from-purple-500 to-violet-600',
-      bgColor: 'from-purple-50 to-violet-50',
+      bgColor: 'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
       questions: [
         {
           question: 'What payment methods do you accept?',
@@ -95,7 +95,7 @@ export default function FAQPage() {
       icon: Award,
       title: 'Campaigns & Voting',
       color: 'from-amber-500 to-orange-600',
-      bgColor: 'from-amber-50 to-orange-50',
+      bgColor: 'from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20',
       questions: [
         {
           question: 'How do I create a campaign?',
@@ -118,11 +118,11 @@ export default function FAQPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <Navigation />
       
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -134,7 +134,7 @@ export default function FAQPage() {
                 Frequently Asked Questions
               </span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-600 dark:text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               Find answers to common questions about our voting platform. 
               Can't find what you're looking for? Contact our support team.
             </p>
@@ -153,16 +153,16 @@ export default function FAQPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: categoryIndex * 0.1 }}
               >
-                <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg">
+                <Card className="border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg">
                   <CardContent className="p-8">
                     <div className="flex items-center mb-6">
                       <motion.div 
                         className={`w-12 h-12 bg-gradient-to-r ${category.bgColor} rounded-xl flex items-center justify-center mr-4`}
                         whileHover={{ rotate: 5, scale: 1.1 }}
                       >
-                        <category.icon className={`w-6 h-6 bg-gradient-to-r ${category.color} bg-clip-text text-transparent`} />
+                        <category.icon className={`w-6 h-6 text-blue-600 dark:text-blue-400`} />
                       </motion.div>
-                      <h2 className="text-2xl font-bold text-gray-800">{category.title}</h2>
+                      <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-200">{category.title}</h2>
                     </div>
                     
                     <div className="space-y-4">
@@ -173,21 +173,21 @@ export default function FAQPage() {
                         return (
                           <motion.div
                             key={faqIndex}
-                            className="border border-gray-200 rounded-lg overflow-hidden"
+                            className="border border-gray-200 dark:border-slate-600 rounded-lg overflow-hidden"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: faqIndex * 0.1 }}
                           >
                             <button
                               onClick={() => toggleItem(globalIndex)}
-                              className="w-full px-6 py-4 text-left bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between"
+                              className="w-full px-6 py-4 text-left bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors duration-200 flex items-center justify-between"
                             >
-                              <span className="font-medium text-gray-800">{faq.question}</span>
+                              <span className="font-medium text-gray-800 dark:text-slate-200">{faq.question}</span>
                               <motion.div
                                 animate={{ rotate: isOpen ? 180 : 0 }}
                                 transition={{ duration: 0.2 }}
                               >
-                                <ChevronDown className="w-5 h-5 text-gray-500" />
+                                <ChevronDown className="w-5 h-5 text-gray-500 dark:text-slate-400" />
                               </motion.div>
                             </button>
                             
@@ -200,8 +200,8 @@ export default function FAQPage() {
                                   transition={{ duration: 0.3 }}
                                   className="overflow-hidden"
                                 >
-                                  <div className="px-6 py-4 bg-white border-t border-gray-200">
-                                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                                  <div className="px-6 py-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-600">
+                                    <p className="text-gray-600 dark:text-slate-300 leading-relaxed">{faq.answer}</p>
                                   </div>
                                 </motion.div>
                               )}

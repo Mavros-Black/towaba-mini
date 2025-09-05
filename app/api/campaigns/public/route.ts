@@ -62,7 +62,7 @@ export async function GET() {
     console.log('First campaign sample:', campaigns?.[0])
 
     // Transform database data to match frontend expectations
-    const transformedCampaigns = (campaigns || []).map(campaign => ({
+    const transformedCampaigns = (campaigns || []).map((campaign: any) => ({
       id: campaign.id,
       title: campaign.title || 'Untitled Campaign',
       description: campaign.description || 'No description available',

@@ -23,30 +23,30 @@ import {
 export default function HowToPage() {
   const steps = [
     {
-      icon: UserPlus,
-      title: 'Create Your Account',
-      description: 'Sign up for free and verify your email address to get started.',
-      details: [
-        'Click "Sign Up" in the top navigation',
-        'Fill in your personal details',
-        'Verify your email address',
-        'Complete your profile setup'
-      ],
-      color: 'from-blue-500 to-indigo-600',
-      bgColor: 'from-blue-50 to-indigo-50',
-    },
-    {
       icon: Search,
-      title: 'Browse Campaigns',
-      description: 'Discover exciting voting campaigns and events happening now.',
+      title: 'Find Campaigns',
+      description: 'Browse available voting campaigns and discover exciting events.',
       details: [
         'Visit the "Browse Campaigns" page',
-        'Filter by category or location',
-        'Read campaign descriptions',
-        'Check voting requirements'
+        'Search for campaigns by name or category',
+        'Read campaign descriptions and rules',
+        'Check voting requirements and deadlines'
+      ],
+      color: 'from-blue-500 to-indigo-600',
+      bgColor: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20',
+    },
+    {
+      icon: Users,
+      title: 'Explore Categories',
+      description: 'Find categories within campaigns and see available nominees.',
+      details: [
+        'Select a campaign to view its categories',
+        'Browse different voting categories',
+        'View nominee profiles and information',
+        'Read nominee bios and descriptions'
       ],
       color: 'from-green-500 to-emerald-600',
-      bgColor: 'from-green-50 to-emerald-50',
+      bgColor: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
     },
     {
       icon: Vote,
@@ -55,24 +55,24 @@ export default function HowToPage() {
       details: [
         'Select your preferred nominee',
         'Choose your voting amount (if required)',
-        'Complete payment (if applicable)',
-        'Confirm your vote'
+        'Complete payment securely (if applicable)',
+        'Confirm your vote and see it counted'
       ],
       color: 'from-purple-500 to-violet-600',
-      bgColor: 'from-purple-50 to-violet-50',
+      bgColor: 'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
     },
     {
       icon: Trophy,
       title: 'Track Results',
       description: 'Watch real-time results and celebrate with the winners.',
       details: [
-        'View live vote counts',
-        'Follow campaign progress',
-        'See final results',
-        'Celebrate the winners'
+        'View live vote counts and rankings',
+        'Follow campaign progress in real-time',
+        'See final results when campaigns end',
+        'Celebrate the winners and nominees'
       ],
       color: 'from-amber-500 to-orange-600',
-      bgColor: 'from-amber-50 to-orange-50',
+      bgColor: 'from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20',
     }
   ]
 
@@ -131,11 +131,11 @@ export default function HowToPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <Navigation />
       
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -147,7 +147,7 @@ export default function HowToPage() {
                 How It Works
               </span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-600 dark:text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               Learn how to participate in voting campaigns and create your own events. 
               It's simple, secure, and designed for everyone.
             </p>
@@ -170,8 +170,8 @@ export default function HowToPage() {
                 For Voters
               </span>
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Follow these simple steps to start voting in campaigns and supporting your favorites.
+            <p className="text-lg text-gray-600 dark:text-slate-300 max-w-2xl mx-auto">
+              No registration required! Simply find campaigns, explore categories, and vote for your favorites.
             </p>
           </motion.div>
 
@@ -186,27 +186,27 @@ export default function HowToPage() {
                 whileHover={{ y: -10 }}
                 className="group"
               >
-                <Card className="h-full text-center hover:shadow-2xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm group-hover:bg-white">
+                <Card className="h-full text-center hover:shadow-2xl transition-all duration-300 border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm group-hover:bg-white dark:group-hover:bg-slate-800">
                   <CardHeader className="pb-4">
                     <motion.div 
                       className={`mx-auto w-16 h-16 bg-gradient-to-r ${step.bgColor} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
                       whileHover={{ rotate: 5 }}
                     >
-                      <step.icon className={`w-8 h-8 bg-gradient-to-r ${step.color} bg-clip-text text-transparent`} />
+                      <step.icon className={`w-8 h-8 text-blue-600 dark:text-blue-400`} />
                     </motion.div>
-                    <div className="text-sm font-bold text-amber-600 mb-2">STEP {index + 1}</div>
-                    <CardTitle className="text-xl font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">
+                    <div className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-2">STEP {index + 1}</div>
+                    <CardTitle className="text-xl font-semibold text-gray-800 dark:text-slate-200 group-hover:text-gray-900 dark:group-hover:text-slate-100 transition-colors">
                       {step.title}
                     </CardTitle>
-                    <CardDescription className="text-gray-600">
+                    <CardDescription className="text-gray-600 dark:text-slate-300">
                       {step.description}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="text-left space-y-2">
                       {step.details.map((detail, detailIndex) => (
-                        <li key={detailIndex} className="flex items-start text-sm text-gray-600">
-                          <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <li key={detailIndex} className="flex items-start text-sm text-gray-600 dark:text-slate-300">
+                          <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400 mr-2 mt-0.5 flex-shrink-0" />
                           {detail}
                         </li>
                       ))}
@@ -220,7 +220,7 @@ export default function HowToPage() {
       </section>
 
       {/* Organizer Steps */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-amber-50/30">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-amber-50/30 dark:from-slate-800 dark:to-slate-700/30">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -234,7 +234,7 @@ export default function HowToPage() {
                 For Organizers
               </span>
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-slate-300 max-w-2xl mx-auto">
               Create and manage your own voting campaigns with our comprehensive organizer tools.
             </p>
           </motion.div>
@@ -250,19 +250,19 @@ export default function HowToPage() {
                 whileHover={{ y: -10 }}
                 className="group"
               >
-                <Card className="h-full text-center hover:shadow-2xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm group-hover:bg-white">
+                <Card className="h-full text-center hover:shadow-2xl transition-all duration-300 border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm group-hover:bg-white dark:group-hover:bg-slate-800">
                   <CardHeader className="pb-4">
                     <motion.div 
                       className={`mx-auto w-16 h-16 bg-gradient-to-r ${step.bgColor} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
                       whileHover={{ rotate: 5 }}
                     >
-                      <step.icon className={`w-8 h-8 bg-gradient-to-r ${step.color} bg-clip-text text-transparent`} />
+                      <step.icon className={`w-8 h-8 text-purple-600 dark:text-purple-400`} />
                     </motion.div>
-                    <div className="text-sm font-bold text-purple-600 mb-2">STEP {index + 1}</div>
-                    <CardTitle className="text-xl font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">
+                    <div className="text-sm font-bold text-purple-600 dark:text-purple-400 mb-2">STEP {index + 1}</div>
+                    <CardTitle className="text-xl font-semibold text-gray-800 dark:text-slate-200 group-hover:text-gray-900 dark:group-hover:text-slate-100 transition-colors">
                       {step.title}
                     </CardTitle>
-                    <CardDescription className="text-gray-600">
+                    <CardDescription className="text-gray-600 dark:text-slate-300">
                       {step.description}
                     </CardDescription>
                   </CardHeader>
@@ -288,7 +288,7 @@ export default function HowToPage() {
                 Why Choose Our Platform?
               </span>
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-slate-300 max-w-2xl mx-auto">
               Experience the benefits of our modern, secure, and user-friendly voting platform.
             </p>
           </motion.div>
@@ -304,18 +304,18 @@ export default function HowToPage() {
                 whileHover={{ y: -10 }}
                 className="group"
               >
-                <Card className="h-full text-center hover:shadow-2xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm group-hover:bg-white">
+                <Card className="h-full text-center hover:shadow-2xl transition-all duration-300 border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm group-hover:bg-white dark:group-hover:bg-slate-800">
                   <CardHeader className="pb-4">
                     <motion.div 
-                      className="mx-auto w-16 h-16 bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                      className="mx-auto w-16 h-16 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
                       whileHover={{ rotate: 5 }}
                     >
-                      <feature.icon className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent" />
+                      <feature.icon className="w-8 h-8 text-green-600 dark:text-green-400" />
                     </motion.div>
-                    <CardTitle className="text-xl font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">
+                    <CardTitle className="text-xl font-semibold text-gray-800 dark:text-slate-200 group-hover:text-gray-900 dark:group-hover:text-slate-100 transition-colors">
                       {feature.title}
                     </CardTitle>
-                    <CardDescription className="text-gray-600">
+                    <CardDescription className="text-gray-600 dark:text-slate-300">
                       {feature.description}
                     </CardDescription>
                   </CardHeader>
