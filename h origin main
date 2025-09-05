@@ -1,0 +1,5 @@
+[33m7b59739[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m feat: prepare app for Vercel deployment
+[33m74317d3[m Fix Supabase client initialization for Netlify build
+[33m395944a[m fix: add typescript for Netlify build
+[33maf8c214[m Fix TypeScript dependency for Netlify build - version 5.1.6
+[33mac87eff[m Fix Supabase client initialization for Netlify build
