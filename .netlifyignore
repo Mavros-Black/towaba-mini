@@ -1,0 +1,21 @@
+# Netlify ignore file
+# These files should not be deployed
+
+# Temporary scripts
+scripts/fix-*.js
+scripts/test-*.js
+scripts/debug-*.js
+
+# Development files
+.env.local
+.env.development
+
+# Documentation that might contain examples
+docs/
+*.md
+
+# Test files
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
