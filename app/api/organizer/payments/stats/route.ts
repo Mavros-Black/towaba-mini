@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch campaigns' }, { status: 500 })
     }
 
-    const campaignIds = campaigns?.map(c => c.id) || []
+    const campaignIds = campaigns?.map((c: any) => c.id) || []
 
     if (campaignIds.length === 0) {
       return NextResponse.json({
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate stats from successful transactions only
-    const totalRevenue = votes?.reduce((sum, v) => sum + (v.amount || 0), 0) || 0
+    const totalRevenue = votes?.reduce((sum: number, v: any) => sum + (v.amount || 0), 0) || 0
     const totalEarnings = Math.floor(totalRevenue * 0.85) // 85% to organizer
     const totalPlatformFees = Math.floor(totalRevenue * 0.15) // 15% to platform
     const totalTransactions = votes?.length || 0
@@ -73,8 +73,8 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching payouts:', payoutsError)
     }
 
-    const pendingPayouts = payouts?.filter(p => p.status === 'PENDING').reduce((sum, p) => sum + (p.amount || 0), 0) || 0
-    const processedPayouts = payouts?.filter(p => p.status === 'PROCESSED').reduce((sum, p) => sum + (p.amount || 0), 0) || 0
+    const pendingPayouts = payouts?.filter((p: any) => p.status === 'PENDING').reduce((sum: number, p: any) => sum + (p.amount || 0), 0) || 0
+    const processedPayouts = payouts?.filter((p: any) => p.status === 'PROCESSED').reduce((sum: number, p: any) => sum + (p.amount || 0), 0) || 0
     const availableBalance = totalEarnings - processedPayouts - pendingPayouts
 
     // Calculate monthly growth (simplified)
@@ -83,18 +83,18 @@ export async function GET(request: NextRequest) {
     const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
 
-    const currentMonthTransactions = votes?.filter(v => {
+    const currentMonthTransactions = votes?.filter((v: any) => {
       const date = new Date(v.created_at)
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear
     }) || []
 
-    const lastMonthTransactions = votes?.filter(v => {
+    const lastMonthTransactions = votes?.filter((v: any) => {
       const date = new Date(v.created_at)
       return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear
     }) || []
 
-    const currentMonthRevenue = currentMonthTransactions.reduce((sum, v) => sum + (v.amount || 0), 0)
-    const lastMonthRevenue = lastMonthTransactions.reduce((sum, v) => sum + (v.amount || 0), 0)
+    const currentMonthRevenue = currentMonthTransactions.reduce((sum: number, v: any) => sum + (v.amount || 0), 0)
+    const lastMonthRevenue = lastMonthTransactions.reduce((sum: number, v: any) => sum + (v.amount || 0), 0)
     const monthlyGrowth = lastMonthRevenue > 0 ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0
 
     return NextResponse.json({

@@ -278,7 +278,7 @@ export function PayoutRequestModal({
                   value={formData.bank_details.payment_method || 'bank'}
                   onValueChange={(value) => setFormData(prev => ({
                     ...prev,
-                    bank_details: { ...prev.bank_details, payment_method: value }
+                    bank_details: { ...prev.bank_details, payment_method: value as 'bank' | 'mobile_money' }
                   }))}
                 >
                   <SelectTrigger>

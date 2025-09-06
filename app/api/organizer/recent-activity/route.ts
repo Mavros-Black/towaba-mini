@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const campaignIds = campaigns?.map(c => c.id) || []
+    const campaignIds = campaigns?.map((c: any) => c.id) || []
     console.log('Found campaigns:', campaigns?.length || 0, 'Campaign IDs:', campaignIds)
 
     // Get recent votes (only if we have campaigns)
@@ -88,10 +88,10 @@ export async function GET(request: NextRequest) {
     console.log('Found payouts:', recentPayouts?.length || 0)
 
     // Combine and format activities
-    const activities = []
+    const activities: any[] = []
 
     // Add campaign creation activities
-    campaigns?.forEach(campaign => {
+    campaigns?.forEach((campaign: any) => {
       activities.push({
         id: `campaign-${campaign.id}`,
         type: 'campaign_created',
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
 
     // Add vote activities (grouped by time)
     const voteGroups = new Map()
-    recentVotes?.forEach(vote => {
+    recentVotes?.forEach((vote: any) => {
       const date = new Date(vote.created_at).toDateString()
       if (!voteGroups.has(date)) {
         voteGroups.set(date, {
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
       group.count += Math.floor((vote.amount || 0) / 100) // Convert to vote count
       group.totalAmount += vote.amount || 0
       // Find campaign title from the campaigns we already fetched
-      const campaign = campaigns?.find(c => c.id === vote.campaign_id)
+      const campaign = campaigns?.find((c: any) => c.id === vote.campaign_id)
       group.campaigns.add(campaign?.title || 'Unknown Campaign')
     })
 
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Add payout activities
-    recentPayouts?.forEach(payout => {
+    recentPayouts?.forEach((payout: any) => {
       activities.push({
         id: `payout-${payout.id}`,
         type: 'payout_requested',

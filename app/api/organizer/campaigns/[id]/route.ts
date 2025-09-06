@@ -570,7 +570,7 @@ async function handleCategorizedCampaignUpdate(campaignId: string, categories: a
 
     // Process nominees in this category
     for (const nomineeData of categoryData.nominees) {
-      const existingNominee = existingNominees?.find(n => n.name === nomineeData.name && n.category_id === category.id)
+      const existingNominee = existingNominees?.find((n: any) => n.name === nomineeData.name && n.category_id === category.id)
       
       if (existingNominee) {
         // Update existing nominee (only if it doesn't have votes or we're just updating details)
@@ -619,8 +619,8 @@ async function handleCategorizedCampaignUpdate(campaignId: string, categories: a
   }
 
   // Remove nominees that are no longer in any category (only if they don't have votes)
-  const newNomineeNames = categories.flatMap(c => c.nominees.map(n => n.name))
-  const nomineesToRemove = existingNominees?.filter(n => 
+  const newNomineeNames = categories.flatMap((c: any) => c.nominees.map((n: any) => n.name))
+  const nomineesToRemove = existingNominees?.filter((n: any) =>
     !newNomineeNames.includes(n.name) && !nomineesWithVotesIds.includes(n.id)
   ) || []
 
@@ -647,11 +647,11 @@ async function handleDirectCampaignUpdate(campaignId: string, nominees: any[], n
     throw new Error('Failed to fetch existing nominees: ' + existingError.message)
   }
 
-  const nomineesWithVotesIds = nomineesWithVotes.map(n => n.id)
+  const nomineesWithVotesIds = nomineesWithVotes.map((n: any) => n.id)
   
   // Process each nominee
   for (const nomineeData of nominees) {
-    const existingNominee = existingNominees?.find(n => n.name === nomineeData.name)
+    const existingNominee = existingNominees?.find((n: any) => n.name === nomineeData.name)
     
     if (existingNominee) {
       // Update existing nominee
@@ -698,8 +698,8 @@ async function handleDirectCampaignUpdate(campaignId: string, nominees: any[], n
   }
 
   // Remove nominees that are no longer in the list (only if they don't have votes)
-  const newNomineeNames = nominees.map(n => n.name)
-  const nomineesToRemove = existingNominees?.filter(n => 
+  const newNomineeNames = nominees.map((n: any) => n.name)
+  const nomineesToRemove = existingNominees?.filter((n: any) =>
     !newNomineeNames.includes(n.name) && !nomineesWithVotesIds.includes(n.id)
   ) || []
 
