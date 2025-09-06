@@ -22,6 +22,8 @@ interface VotingModalProps {
   campaign: {
     id: string
     title: string
+    amount_per_vote?: number | null
+    require_payment?: boolean | null
   }
 }
 
@@ -175,6 +177,7 @@ export function VotingModal({ isOpen, onClose, nominee, campaign }: VotingModalP
                   )}
                 </div>
 
+
                 {/* Voter Name Input */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
@@ -206,7 +209,10 @@ export function VotingModal({ isOpen, onClose, nominee, campaign }: VotingModalP
                     disabled={isProcessing}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Minimum: 1 GHS
+                    {campaign.require_payment !== false && campaign.amount_per_vote 
+                      ? `Vote cost: ₵${((campaign.amount_per_vote || 100) / 100).toFixed(2)} per vote`
+                      : 'Minimum: 1 GHS'
+                    }
                   </p>
                 </div>
 

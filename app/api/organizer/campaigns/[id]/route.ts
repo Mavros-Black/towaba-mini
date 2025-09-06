@@ -154,7 +154,7 @@ export async function PUT(
     // Verify the campaign belongs to the authenticated user
     const { data: existingCampaign, error: campaignCheckError } = await supabase
       .from('campaigns')
-      .select('id, organizer_id')
+      .select('id, organizer_id, campaign_type, is_public')
       .eq('id', campaignId)
       .single()
 
@@ -192,10 +192,10 @@ export async function PUT(
     // If campaign has votes, prevent certain changes
     if (hasVotes) {
       // Prevent campaign type changes
-      if ((existingCampaign as any).campaign_type !== campaignType) {
+      if (existingCampaign.campaign_type !== campaignType) {
         return NextResponse.json(
           { 
-            error: `Cannot change campaign type from "${(existingCampaign as any).campaign_type}" to "${campaignType}" - campaign has ${votes.length} votes. Campaign structure cannot be changed once voting begins.`,
+            error: `Cannot change campaign type from "${existingCampaign.campaign_type}" to "${campaignType}" - campaign has ${votes.length} votes. Campaign structure cannot be changed once voting begins.`,
             voteCount: votes.length,
             canChangeStructure: false
           },
@@ -204,7 +204,7 @@ export async function PUT(
       }
 
       // Prevent making campaign private if it was public
-      if ((existingCampaign as any).is_public === true && !isPublic) {
+      if (existingCampaign.is_public === true && !isPublic) {
         return NextResponse.json(
           { 
             error: `Cannot make campaign private - it has ${votes.length} votes. Campaign visibility cannot be changed once voting begins.`,
@@ -247,29 +247,50 @@ export async function PUT(
       status: campaignStatus
     })
 
+    // Debug: Log the values being sent for update
+    console.log('Campaign update debug:', {
+      campaignId,
+      amountPerVote,
+      convertedAmount: amountPerVote ? Math.round(amountPerVote * 100) : null,
+      title,
+      campaignType
+    })
+
+    // Validate amount_per_vote is reasonable (between 1 and 1000 cedis)
+    if (amountPerVote && (amountPerVote < 0.01 || amountPerVote > 1000)) {
+      return NextResponse.json(
+        { error: 'Amount per vote must be between 0.01 and 1000 cedis' },
+        { status: 400 }
+      )
+    }
+
     // Update campaign
+    const updateData = {
+      title,
+      description: description || null,
+      cover_image: coverImage || null,
+      start_date: startDate || null,
+      end_date: endDate || null,
+      amount_per_vote: amountPerVote ? Math.round(amountPerVote * 100) : null, // Convert GHS to pesewas
+      is_public: isPublic,
+      allow_anonymous_voting: allowAnonymousVoting,
+      max_votes_per_user: maxVotesPerUser,
+      campaign_type: campaignType,
+      require_payment: requirePayment,
+      payment_methods: paymentMethods,
+      auto_publish: autoPublish,
+      allow_editing: allowEditing,
+      show_vote_counts: showVoteCounts,
+      show_voter_names: showVoterNames,
+      status: campaignStatus,
+      updated_at: new Date().toISOString()
+    }
+
+    console.log('Update data being sent:', updateData)
+
     const { data: updatedCampaign, error: campaignUpdateError } = await supabase
       .from('campaigns')
-      .update({
-        title,
-        description: description || null,
-        cover_image: coverImage || null,
-        start_date: startDate || null,
-        end_date: endDate || null,
-        amount_per_vote: amountPerVote ? Math.round(amountPerVote * 100) : null, // Convert GHS to pesewas
-        is_public: isPublic,
-        allow_anonymous_voting: allowAnonymousVoting,
-        max_votes_per_user: maxVotesPerUser,
-        campaign_type: campaignType,
-        require_payment: requirePayment,
-        payment_methods: paymentMethods,
-        auto_publish: autoPublish,
-        allow_editing: allowEditing,
-        show_vote_counts: showVoteCounts,
-        show_voter_names: showVoterNames,
-        status: campaignStatus,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', campaignId)
       .select()
       .single()
@@ -282,122 +303,47 @@ export async function PUT(
       )
     }
 
-    // Delete existing categories and nominees
-    const { error: deleteNomineesError } = await supabase
+    // Debug: Log the updated campaign data
+    console.log('Campaign update successful:', {
+      campaignId: updatedCampaign.id,
+      title: updatedCampaign.title,
+      amount_per_vote: updatedCampaign.amount_per_vote,
+      amount_in_cedis: updatedCampaign.amount_per_vote ? (updatedCampaign.amount_per_vote / 100).toFixed(2) : 'null'
+    })
+
+    // Check if any existing nominees have votes
+    const { data: nomineesWithVotes, error: nomineesWithVotesError } = await supabase
       .from('nominees')
-      .delete()
+      .select('id, name, votes_count')
       .eq('campaign_id', campaignId)
+      .gt('votes_count', 0)
 
-    if (deleteNomineesError) {
-      console.error('Error deleting existing nominees:', deleteNomineesError)
+    if (nomineesWithVotesError) {
+      console.error('Error checking nominees with votes:', nomineesWithVotesError)
       return NextResponse.json(
-        { error: 'Failed to delete existing nominees: ' + deleteNomineesError.message },
+        { error: 'Failed to check nominees with votes: ' + nomineesWithVotesError.message },
         { status: 500 }
       )
     }
 
-    const { error: deleteCategoriesError } = await supabase
-      .from('categories')
-      .delete()
-      .eq('campaign_id', campaignId)
-
-    if (deleteCategoriesError) {
-      console.error('Error deleting existing categories:', deleteCategoriesError)
+    // Smart nominee management: allow updates, additions, and safe deletions
+    try {
+      if (categories && categories.length > 0) {
+        // Handle categorized campaigns with smart nominee management
+        await handleCategorizedCampaignUpdate(campaignId, categories, nomineesWithVotes)
+      } else if (nominees && nominees.length > 0) {
+        // Handle direct campaigns with smart nominee management
+        await handleDirectCampaignUpdate(campaignId, nominees, nomineesWithVotes)
+      }
+    } catch (nomineeError) {
+      console.error('Nominee management error:', nomineeError)
       return NextResponse.json(
-        { error: 'Failed to delete existing categories: ' + deleteCategoriesError.message },
+        { error: nomineeError instanceof Error ? nomineeError.message : 'Failed to update nominees' },
         { status: 500 }
       )
     }
 
-    // Create new categories and nominees based on campaign type
-    if (campaignType === 'categorized') {
-      for (const categoryData of categories) {
-        const { data: category, error: categoryError } = await supabase
-          .from('categories')
-          .insert({
-            name: categoryData.name,
-            campaign_id: campaignId,
-          })
-          .select()
-          .single()
-
-        if (categoryError) {
-          console.error('Category creation error:', categoryError)
-          return NextResponse.json(
-            { error: 'Failed to create category: ' + categoryError.message },
-            { status: 500 }
-          )
-        }
-
-        for (const nomineeData of categoryData.nominees) {
-          // Generate unique USSD code for this nominee
-          const ussdCode = await generateUniqueUSSDCode()
-          
-          const { error: nomineeError } = await supabase
-            .from('nominees')
-            .insert({
-              name: nomineeData.name,
-              bio: nomineeData.bio || null,
-              image: nomineeData.image || null,
-              category_id: category.id,
-              campaign_id: campaignId,
-              votes_count: 0,
-              ussd_code: ussdCode,
-            })
-
-          if (nomineeError) {
-            console.error('Nominee creation error:', nomineeError)
-            return NextResponse.json(
-              { error: 'Failed to create nominee: ' + nomineeError.message },
-              { status: 500 }
-            )
-          }
-        }
-      }
-    } else {
-      // Create direct nominees for simple campaigns
-      const { data: defaultCategory, error: categoryError } = await supabase
-        .from('categories')
-        .insert({
-          name: 'General',
-          campaign_id: campaignId,
-        })
-        .select()
-        .single()
-
-      if (categoryError) {
-        console.error('Default category creation error:', categoryError)
-        return NextResponse.json(
-          { error: 'Failed to create default category: ' + categoryError.message },
-          { status: 500 }
-        )
-      }
-
-      for (const nomineeData of directNominees) {
-        // Generate unique USSD code for this nominee
-        const ussdCode = await generateUniqueUSSDCode()
-        
-        const { error: nomineeError } = await supabase
-          .from('nominees')
-          .insert({
-            name: nomineeData.name,
-            bio: nomineeData.bio || null,
-            image: nomineeData.image || null,
-            category_id: defaultCategory.id,
-            campaign_id: campaignId,
-            votes_count: 0,
-            ussd_code: ussdCode,
-          })
-
-        if (nomineeError) {
-          console.error('Nominee creation error:', nomineeError)
-          return NextResponse.json(
-            { error: 'Failed to create nominee: ' + nomineeError.message },
-            { status: 500 }
-          )
-        }
-      }
-    }
+    // Nominee management is now handled by the helper functions above
 
     console.log('Campaign updated successfully:', campaignId)
 
@@ -576,5 +522,192 @@ export async function DELETE(
       { error: 'Failed to delete campaign: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     )
+  }
+}
+
+// Helper function to handle categorized campaign updates with smart nominee management
+async function handleCategorizedCampaignUpdate(campaignId: string, categories: any[], nomineesWithVotes: any[]) {
+  
+  // Get existing nominees to compare
+  const { data: existingNominees, error: existingError } = await supabase
+    .from('nominees')
+    .select('id, name, bio, image, category_id, votes_count, ussd_code')
+    .eq('campaign_id', campaignId)
+
+  if (existingError) {
+    throw new Error('Failed to fetch existing nominees: ' + existingError.message)
+  }
+
+  const nomineesWithVotesIds = nomineesWithVotes.map(n => n.id)
+  
+  // Process each category
+  for (const categoryData of categories) {
+    // Find or create category
+    let category
+    const { data: existingCategory } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .eq('name', categoryData.name)
+      .single()
+
+    if (existingCategory) {
+      category = existingCategory
+    } else {
+      const { data: newCategory, error: categoryError } = await supabase
+        .from('categories')
+        .insert({
+          name: categoryData.name,
+          campaign_id: campaignId,
+        })
+        .select()
+        .single()
+
+      if (categoryError) throw new Error('Failed to create category: ' + categoryError.message)
+      category = newCategory
+    }
+
+    // Process nominees in this category
+    for (const nomineeData of categoryData.nominees) {
+      const existingNominee = existingNominees?.find(n => n.name === nomineeData.name && n.category_id === category.id)
+      
+      if (existingNominee) {
+        // Update existing nominee (only if it doesn't have votes or we're just updating details)
+        if (!nomineesWithVotesIds.includes(existingNominee.id)) {
+          // Safe to update - no votes
+          const { error: updateError } = await supabase
+            .from('nominees')
+            .update({
+              bio: nomineeData.bio || null,
+              image: nomineeData.image || null,
+            })
+            .eq('id', existingNominee.id)
+
+          if (updateError) throw new Error('Failed to update nominee: ' + updateError.message)
+        } else {
+          // Has votes - only allow safe updates (name, bio, image)
+          const { error: updateError } = await supabase
+            .from('nominees')
+            .update({
+              name: nomineeData.name,
+              bio: nomineeData.bio || null,
+              image: nomineeData.image || null,
+            })
+            .eq('id', existingNominee.id)
+
+          if (updateError) throw new Error('Failed to update nominee: ' + updateError.message)
+        }
+      } else {
+        // Create new nominee
+        const ussdCode = await generateUniqueUSSDCode()
+        const { error: createError } = await supabase
+          .from('nominees')
+          .insert({
+            name: nomineeData.name,
+            bio: nomineeData.bio || null,
+            image: nomineeData.image || null,
+            category_id: category.id,
+            campaign_id: campaignId,
+            votes_count: 0,
+            ussd_code: ussdCode,
+          })
+
+        if (createError) throw new Error('Failed to create nominee: ' + createError.message)
+      }
+    }
+  }
+
+  // Remove nominees that are no longer in any category (only if they don't have votes)
+  const newNomineeNames = categories.flatMap(c => c.nominees.map(n => n.name))
+  const nomineesToRemove = existingNominees?.filter(n => 
+    !newNomineeNames.includes(n.name) && !nomineesWithVotesIds.includes(n.id)
+  ) || []
+
+  for (const nominee of nomineesToRemove) {
+    const { error: deleteError } = await supabase
+      .from('nominees')
+      .delete()
+      .eq('id', nominee.id)
+
+    if (deleteError) throw new Error('Failed to delete nominee: ' + deleteError.message)
+  }
+}
+
+// Helper function to handle direct campaign updates with smart nominee management
+async function handleDirectCampaignUpdate(campaignId: string, nominees: any[], nomineesWithVotes: any[]) {
+  
+  // Get existing nominees to compare
+  const { data: existingNominees, error: existingError } = await supabase
+    .from('nominees')
+    .select('id, name, bio, image, votes_count, ussd_code')
+    .eq('campaign_id', campaignId)
+
+  if (existingError) {
+    throw new Error('Failed to fetch existing nominees: ' + existingError.message)
+  }
+
+  const nomineesWithVotesIds = nomineesWithVotes.map(n => n.id)
+  
+  // Process each nominee
+  for (const nomineeData of nominees) {
+    const existingNominee = existingNominees?.find(n => n.name === nomineeData.name)
+    
+    if (existingNominee) {
+      // Update existing nominee
+      if (!nomineesWithVotesIds.includes(existingNominee.id)) {
+        // Safe to update - no votes
+        const { error: updateError } = await supabase
+          .from('nominees')
+          .update({
+            bio: nomineeData.bio || null,
+            image: nomineeData.image || null,
+          })
+          .eq('id', existingNominee.id)
+
+        if (updateError) throw new Error('Failed to update nominee: ' + updateError.message)
+      } else {
+        // Has votes - only allow safe updates (name, bio, image)
+        const { error: updateError } = await supabase
+          .from('nominees')
+          .update({
+            name: nomineeData.name,
+            bio: nomineeData.bio || null,
+            image: nomineeData.image || null,
+          })
+          .eq('id', existingNominee.id)
+
+        if (updateError) throw new Error('Failed to update nominee: ' + updateError.message)
+      }
+    } else {
+      // Create new nominee
+      const ussdCode = await generateUniqueUSSDCode()
+      const { error: createError } = await supabase
+        .from('nominees')
+        .insert({
+          name: nomineeData.name,
+          bio: nomineeData.bio || null,
+          image: nomineeData.image || null,
+          campaign_id: campaignId,
+          votes_count: 0,
+          ussd_code: ussdCode,
+        })
+
+      if (createError) throw new Error('Failed to create nominee: ' + createError.message)
+    }
+  }
+
+  // Remove nominees that are no longer in the list (only if they don't have votes)
+  const newNomineeNames = nominees.map(n => n.name)
+  const nomineesToRemove = existingNominees?.filter(n => 
+    !newNomineeNames.includes(n.name) && !nomineesWithVotesIds.includes(n.id)
+  ) || []
+
+  for (const nominee of nomineesToRemove) {
+    const { error: deleteError } = await supabase
+      .from('nominees')
+      .delete()
+      .eq('id', nominee.id)
+
+    if (deleteError) throw new Error('Failed to delete nominee: ' + deleteError.message)
   }
 }

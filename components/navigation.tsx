@@ -40,8 +40,8 @@ export function Navigation() {
   }, [])
 
   return (
-    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/30 dark:border-slate-700/30 shadow-lg rounded-2xl w-[80%] max-w-6xl">
-      <div className="px-6 lg:px-8">
+    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/30 dark:border-slate-700/30 shadow-md rounded-2xl w-[95%] sm:w-[90%] md:w-[80%] max-w-6xl">
+      <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
@@ -65,13 +65,14 @@ export function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  className={`px-4 py-2 text-sm font-semibold transition-all duration-300 relative overflow-hidden ${
                     pathname === item.href
-                      ? 'text-slate-800 dark:text-white bg-slate-200/30 dark:bg-white/20 backdrop-blur-sm'
-                      : 'text-slate-600 dark:text-white/80 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100/20 dark:hover:bg-white/10 backdrop-blur-sm'
+                      ? 'text-slate-800 dark:text-white'
+                      : 'text-slate-600 dark:text-white/80 hover:text-slate-800 dark:hover:text-white hover:scale-105 hover:translate-y-[-1px] hover:bg-slate-900/5 dark:hover:bg-white/5'
                   }`}
                 >
                   {item.name}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 dark:to-white/5 pointer-events-none"></div>
                 </Link>
               ))}
             </div>
@@ -121,7 +122,7 @@ export function Navigation() {
               </div>
             ) : (
               <>
-                <Link href="/organizer/register">
+                <Link href="/organizer/register" className="hidden md:block">
                   <Button 
                     variant="outline"
                     className="bg-slate-100/20 dark:bg-white/10 hover:bg-slate-200/30 dark:hover:bg-white/20 backdrop-blur-sm border border-slate-300/50 dark:border-white/30 text-slate-700 dark:text-white hover:text-slate-800 dark:hover:text-white transition-all duration-300 rounded-xl"
@@ -129,7 +130,7 @@ export function Navigation() {
                     Become Organizer
                   </Button>
                 </Link>
-                <Link href="/login">
+                <Link href="/login" className="hidden md:block">
                   <Button 
                     className="bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-amber-400 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-amber-400/20"
                   >
@@ -145,7 +146,7 @@ export function Navigation() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="bg-slate-100/20 dark:bg-slate-700/20 hover:bg-slate-200/30 dark:hover:bg-slate-600/30 backdrop-blur-sm border border-slate-200/30 dark:border-slate-600/30 text-slate-700 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-300 rounded-xl"
+                className="bg-slate-100/30 dark:bg-slate-700/30 hover:bg-slate-200/40 dark:hover:bg-slate-600/40 backdrop-blur-sm border border-slate-200/40 dark:border-slate-600/40 text-slate-700 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-300 rounded-xl shadow-sm"
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
@@ -160,23 +161,44 @@ export function Navigation() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden absolute top-full left-0 right-0 mt-2 border border-slate-200/20 dark:border-slate-700/20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-lg"
+          className="md:hidden absolute top-full left-0 right-0 mt-3 border border-slate-200/30 dark:border-slate-700/30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-lg"
         >
-          <div className="px-4 pt-4 pb-6 space-y-2">
+          <div className="px-4 pt-4 pb-6 space-y-1">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`block px-4 py-3 rounded-xl text-base font-semibold transition-all duration-300 ${
+                className={`block px-4 py-3 text-base font-semibold transition-all duration-300 rounded-xl ${
                   pathname === item.href
-                    ? 'text-slate-800 dark:text-slate-200 bg-slate-200/30 dark:bg-slate-700/30 backdrop-blur-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100/20 dark:hover:bg-slate-700/20 backdrop-blur-sm'
+                    ? 'text-slate-800 dark:text-slate-200 bg-slate-100/50 dark:bg-slate-700/30'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100/30 dark:hover:bg-slate-700/20'
                 }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
               </Link>
             ))}
+            
+            {/* Mobile Auth Buttons */}
+            {!user && (
+              <div className="pt-4 border-t border-slate-200/20 dark:border-slate-700/20 space-y-2">
+                <Link href="/organizer/register" onClick={() => setMobileMenuOpen(false)}>
+                  <Button 
+                    variant="outline"
+                    className="w-full bg-slate-100/20 dark:bg-white/10 hover:bg-slate-200/30 dark:hover:bg-white/20 backdrop-blur-sm border border-slate-300/50 dark:border-white/30 text-slate-700 dark:text-white hover:text-slate-800 dark:hover:text-white transition-all duration-300 rounded-xl"
+                  >
+                    Become Organizer
+                  </Button>
+                </Link>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-amber-400 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-amber-400/20"
+                  >
+                    Login
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </motion.div>
       )}

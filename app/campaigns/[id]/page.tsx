@@ -35,6 +35,8 @@ interface Campaign {
   description: string | null
   cover_image: string | null
   created_at: string
+  amount_per_vote?: number | null
+  require_payment?: boolean | null
   organizer: {
     name: string
   }
@@ -245,7 +247,7 @@ export default function CampaignPage() {
       
       {/* Campaign Header */}
       <div className="relative">
-        <div className="h-64 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="h-72 pb-8 bg-gradient-to-r from-blue-600 to-purple-600">
           {campaign.cover_image && (
             <img
               src={campaign.cover_image}
@@ -255,7 +257,7 @@ export default function CampaignPage() {
           )}
         </div>
         <div className="absolute inset-0 bg-black/40" />
-        <div className="absolute inset-0 flex items-center">
+        <div className="absolute inset-0 flex items-center pt-20">
           <div className="container mx-auto px-4">
             <Link href="/campaigns">
               <Button variant="ghost" className="text-white hover:bg-white/20 mb-4 transition-all duration-700 hover:scale-[1.02]">
@@ -270,7 +272,7 @@ export default function CampaignPage() {
               <p className="text-xl text-white/90 max-w-3xl mx-auto">
                 Vote for your favorite nominees in {campaign.organizer.name}
               </p>
-              <div className="flex items-center justify-center space-x-6 mt-6 text-white/80">
+              <div className="flex items-center justify-center space-x-6 mt-6 mb-4 text-white/80">
                 <div className="flex items-center space-x-2">
                   <Users className="w-5 h-5" />
                   <span>Organized by {campaign.organizer.name}</span>

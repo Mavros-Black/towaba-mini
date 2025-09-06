@@ -1,6 +1,7 @@
 "use client"
 
 import { Navigation } from '@/components/navigation'
+import { Footer } from '@/components/footer'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Shield, Globe, Zap } from 'lucide-react'
@@ -11,7 +12,14 @@ export default function AboutPage() {
       <Navigation />
       
       {/* Header */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden">
+        {/* Background Design */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
+          <div className="absolute top-20 right-20 w-24 h-24 bg-purple-500 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-1/3 w-28 h-28 bg-pink-500 rounded-full blur-2xl"></div>
+        </div>
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -31,7 +39,7 @@ export default function AboutPage() {
 
       {/* Mission Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-[80%] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -57,10 +65,21 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="relative"
+              className="relative flex items-center justify-center"
             >
-              <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center">
-                <Users className="w-32 h-32 text-primary/60" />
+              <div className="text-center">
+                {/* Circular Towaba Logo */}
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="w-48 h-48 bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-600 dark:to-slate-800 rounded-full flex items-center justify-center shadow-2xl mx-auto mb-6"
+                >
+                  <span className="text-amber-400 font-black text-6xl">T</span>
+                </motion.div>
+                
+                {/* Brand Text */}
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white">
+                  Towaba
+                </h3>
               </div>
             </motion.div>
           </div>
@@ -69,7 +88,7 @@ export default function AboutPage() {
 
       {/* Values Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-[80%] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -165,13 +184,7 @@ export default function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-muted-foreground">
-            © 2024 VoteApp. All rights reserved. Built with ❤️ for the community.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

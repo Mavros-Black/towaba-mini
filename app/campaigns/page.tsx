@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Navigation } from '@/components/navigation'
+import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Users, Plus, Loader2 } from 'lucide-react'
@@ -83,18 +84,33 @@ export default function CampaignsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto py-8">
-        {/* Hero Section */}
-        <div className="relative mb-12 overflow-hidden rounded-2xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-800"></div>
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="relative px-8 py-20 text-center text-white">
-            <h1 className="text-5xl font-bold tracking-tight mb-4">Campaigns</h1>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              Discover and participate in exciting voting campaigns from around the world
-            </p>
-          </div>
+      
+      {/* Hero Section - Full Width */}
+      <div className="relative w-full overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-slate-900 dark:via-green-900/20 dark:to-slate-800"></div>
+        {/* Background Design */}
+        <div className="absolute inset-0 opacity-30">
+          {/* Organic Shapes */}
+          <div className="absolute top-16 left-16 w-36 h-36 bg-green-500 rounded-full blur-3xl"></div>
+          <div className="absolute top-24 right-24 w-28 h-28 bg-emerald-500 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-24 left-1/3 w-44 h-44 bg-teal-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-16 right-1/4 w-32 h-32 bg-lime-500 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 left-12 w-24 h-24 bg-green-400 rounded-full blur-xl"></div>
+          <div className="absolute top-1/3 right-12 w-20 h-20 bg-emerald-400 rounded-full blur-xl"></div>
+          <div className="absolute bottom-1/3 left-1/2 w-28 h-28 bg-teal-400 rounded-full blur-xl"></div>
+          <div className="absolute top-2/3 right-1/4 w-16 h-16 bg-lime-400 rounded-full blur-lg"></div>
+          <div className="absolute top-1/4 left-1/3 w-22 h-22 bg-green-300 rounded-full blur-lg"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-18 h-18 bg-emerald-300 rounded-full blur-lg"></div>
         </div>
+        <div className="relative px-8 py-32 text-center text-slate-800 dark:text-white">
+          <h1 className="text-5xl font-bold tracking-tight mb-4">Campaigns</h1>
+          <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            Discover and participate in exciting voting campaigns from around the world
+          </p>
+        </div>
+      </div>
+
+      <div className="container mx-auto py-8">
 
         {/* Search and Filters Section */}
         <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
@@ -209,6 +225,9 @@ export default function CampaignsPage() {
           </div>
         )}
       </div>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

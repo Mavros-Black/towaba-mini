@@ -397,6 +397,13 @@ export default function EditCampaignPage() {
         )
       }
 
+      // Debug: Log the form data before sending
+      console.log('Form data debug:', {
+        amountPerVote: formData.amountPerVote,
+        convertedAmount: formData.amountPerVote * 100,
+        title: formData.title
+      })
+
       // Prepare campaign data
       const campaignData = {
         title: formData.title,

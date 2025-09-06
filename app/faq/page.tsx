@@ -122,8 +122,17 @@ export default function FAQPage() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-amber-900/20 dark:to-slate-800 relative overflow-hidden">
+        {/* Background Design */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-16 left-16 w-36 h-36 bg-amber-500 rounded-full blur-3xl"></div>
+          <div className="absolute top-24 right-24 w-28 h-28 bg-orange-500 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-24 left-1/3 w-44 h-44 bg-red-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-16 right-1/4 w-32 h-32 bg-yellow-500 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 left-8 w-24 h-24 bg-orange-400 rounded-full blur-xl"></div>
+          <div className="absolute top-1/3 right-8 w-20 h-20 bg-amber-400 rounded-full blur-xl"></div>
+        </div>
+        <div className="max-w-7xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
