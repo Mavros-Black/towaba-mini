@@ -3,10 +3,10 @@ import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const campaignId = params.id
+    const { id: campaignId } = await params
 
     // Get the authenticated user from the request
     const authHeader = request.headers.get('authorization')

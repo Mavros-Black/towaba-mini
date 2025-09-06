@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the authorization header
@@ -20,7 +20,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const campaignId = params.id
+    const { id: campaignId } = await params
 
     // Verify campaign ownership
     const { data: campaign, error: campaignError } = await supabase

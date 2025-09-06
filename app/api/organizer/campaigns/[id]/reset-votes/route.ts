@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase-auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the authorization header
@@ -20,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const campaignId = params.id
+    const { id: campaignId } = await params
     const { resetType, customDays, notes } = await request.json()
 
     // Verify campaign ownership
@@ -216,7 +216,7 @@ async function getNextPeriodNumber(campaignId: string): Promise<number> {
 // GET endpoint to fetch current period info
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the authorization header
@@ -233,7 +233,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const campaignId = params.id
+    const { id: campaignId } = await params
 
     // Get campaign with current period info
     const { data: campaign, error: campaignError } = await supabase

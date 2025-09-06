@@ -3,11 +3,11 @@ import { supabase } from '@/lib/supabase-auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; nomineeId: string } }
+  { params }: { params: Promise<{ id: string; nomineeId: string }> }
 ) {
   try {
-    const campaignId = params.id
-    const nomineeId = params.nomineeId
+    const { id: campaignId } = await params
+    const { nomineeId: nomineeId } = await params
     const { reason } = await request.json()
 
     if (!reason || reason.trim().length < 10) {

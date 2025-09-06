@@ -4,10 +4,10 @@ import { generateUniqueUSSDCode } from '@/lib/ussd-codes'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const campaignId = params.id
+    const { id: campaignId } = await params
 
     console.log('Fetching campaign with ID:', campaignId)
     
@@ -98,10 +98,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const campaignId = params.id
+    const { id: campaignId } = await params
     const body = await request.json()
     const { 
       title, 
@@ -365,10 +365,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const campaignId = params.id
+    const { id: campaignId } = await params
 
     // Get the authenticated user from the request
     const authHeader = request.headers.get('authorization')

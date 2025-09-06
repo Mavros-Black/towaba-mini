@@ -6,10 +6,10 @@ const paystackService = new PaystackService()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { reference: string } }
+  { params }: { params: Promise<{ reference: string }> }
 ) {
   try {
-    const { reference } = params
+    const { reference } = await params
     const { searchParams } = new URL(request.url)
     const trxref = searchParams.get('trxref')
     const paystackReference = searchParams.get('reference')
