@@ -1,0 +1,32 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Configure secrets scanning
+[secrets_scanning]
+  # Enable secrets scanning (default: true)
+  enabled = true
+  
+  # Omit specific paths from secrets scanning
+  omit_paths = [
+    "docs/**",
+    "*.md",
+    "TROUBLESHOOTING.md",
+    "SUPABASE_SETUP.md",
+    "README.md"
+  ]
+  
+  # Omit specific keys from secrets scanning
+  omit_keys = [
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY"
+  ]
+
+# Redirect rules for Next.js
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
