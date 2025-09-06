@@ -1,150 +1,125 @@
-# Vercel Deployment Guide for Towaba App
+# Vercel Deployment Guide
 
-## Prerequisites
+## 🚀 Ready for Vercel Deployment!
 
-1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-2. **Supabase Project**: Ensure your Supabase project is set up
-3. **Payment Gateway Accounts**: Paystack and Nalo Solutions accounts configured
+Your app is now fully prepared for Vercel deployment with Next.js 15.
 
-## Environment Variables Setup
+## ✅ Pre-deployment Checklist
 
-### Required Environment Variables in Vercel
+- [x] **Next.js 15.5.2** - Latest version installed
+- [x] **React 19.1.1** - Latest version installed
+- [x] **TypeScript** - All compilation errors fixed
+- [x] **Build Process** - Passes successfully
+- [x] **Secrets Scanning** - All example secrets removed
+- [x] **Vercel Configuration** - Updated for Next.js 15
+- [x] **Dependencies** - All properly installed
 
-Go to your Vercel project dashboard → Settings → Environment Variables and add:
+## 🔧 Environment Variables Required
 
-#### Supabase Configuration
+Set these in your Vercel dashboard:
+
+### Supabase Configuration
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+### Database URLs
+```
 SUPABASE_DB_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 SUPABASE_DIRECT_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 ```
 
-#### Payment Gateway Keys
+### Payment Gateway Keys
 ```
 PAYSTACK_SECRET_KEY=your_paystack_secret_key
 NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=your_paystack_public_key
+```
+
+### Nalo Solutions USSD Integration
+```
 NALO_API_KEY=your_nalo_api_key
 NALO_SECRET=your_nalo_secret_key
 ```
 
-#### App Configuration
+### App Configuration
 ```
 NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
 NEXTAUTH_SECRET=your_nextauth_secret_key
 NEXTAUTH_URL=https://your-app.vercel.app
 ```
 
-## Deployment Steps
+## 🚀 Deployment Steps
 
-### 1. Connect Repository
+### Option 1: Deploy via Vercel CLI
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy
+vercel
+
+# For production deployment
+vercel --prod
+```
+
+### Option 2: Deploy via GitHub Integration
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Click "New Project"
 3. Import your GitHub repository
-4. Select the repository containing your Towaba app
+4. Vercel will auto-detect Next.js 15
+5. Add environment variables
+6. Deploy!
 
-### 2. Configure Build Settings
-- **Framework Preset**: Next.js
-- **Root Directory**: `./` (default)
-- **Build Command**: `npm run build` (automatically detected)
-- **Output Directory**: `.next` (automatically detected)
-- **Install Command**: `npm install` (automatically detected)
+## 📋 Important Notes
 
-### 3. Environment Variables
-1. Add all environment variables listed above
-2. Make sure to set them for Production, Preview, and Development environments
-3. Use the production URLs for `NEXT_PUBLIC_BASE_URL` and `NEXTAUTH_URL`
+### Database Setup
+- **CRITICAL**: Run `scripts/complete-payout-fix.sql` in your Supabase SQL Editor before deployment
+- This fixes the `column payout_requests.type does not exist` error
 
-### 4. Database Setup
-1. Ensure your Supabase database is properly configured
-2. Run database migrations if needed:
-   ```bash
-   npx prisma migrate deploy
-   ```
-3. Generate Prisma client:
-   ```bash
-   npx prisma generate
-   ```
+### Build Configuration
+- Framework: Next.js 15
+- Node.js Version: 22
+- Build Command: `npm run build`
+- Output Directory: `.next`
 
-### 5. Deploy
-1. Click "Deploy" in Vercel dashboard
-2. Wait for the build to complete
-3. Your app will be available at `https://your-app.vercel.app`
+### API Routes
+- All API routes are configured with 30-second timeout
+- Cron job configured for auto-reset votes (daily at midnight)
 
-## Post-Deployment Checklist
+## 🔍 Post-Deployment Verification
 
-### ✅ Verify Environment Variables
-- [ ] All environment variables are set correctly
-- [ ] Supabase connection is working
-- [ ] Payment gateways are configured
+1. **Check Build Logs** - Ensure no errors
+2. **Test API Endpoints** - Verify all routes work
+3. **Test Authentication** - Login/logout functionality
+4. **Test Payments** - Payment gateway integration
+5. **Test Database** - CRUD operations
 
-### ✅ Test Core Functionality
-- [ ] User registration and authentication
-- [ ] Campaign creation and management
-- [ ] Voting system
-- [ ] Payment processing
-- [ ] File uploads (if applicable)
+## 🛠️ Troubleshooting
 
-### ✅ Database Verification
-- [ ] Database connection is stable
-- [ ] All tables are created
-- [ ] Sample data can be inserted/retrieved
+### Common Issues:
+1. **Build Fails**: Check environment variables
+2. **Database Errors**: Verify Supabase connection
+3. **Payment Issues**: Check gateway credentials
+4. **Authentication**: Verify NextAuth configuration
 
-### ✅ Performance Check
-- [ ] Page load times are acceptable
-- [ ] API routes respond correctly
-- [ ] Images load properly
-
-## Troubleshooting
-
-### Common Issues
-
-#### Build Failures
-- Check that all dependencies are in `package.json`
-- Ensure Prisma client is generated during build
-- Verify environment variables are set
-
-#### Database Connection Issues
-- Verify Supabase credentials
-- Check database URL format
-- Ensure database is accessible from Vercel
-
-#### Payment Gateway Issues
-- Verify API keys are correct
-- Check webhook URLs are updated
-- Test payment flows in production
-
-#### Environment Variable Issues
-- Ensure variables are prefixed with `NEXT_PUBLIC_` for client-side access
-- Check for typos in variable names
-- Verify values are properly escaped
-
-### Getting Help
+### Support:
 - Check Vercel deployment logs
-- Review Supabase logs
-- Test API endpoints individually
-- Use browser developer tools for client-side issues
+- Verify environment variables
+- Test locally with production environment
 
-## Security Considerations
+## 🎉 Success!
 
-1. **Environment Variables**: Never commit sensitive keys to version control
-2. **API Keys**: Use different keys for development and production
-3. **Database Access**: Use connection pooling and proper authentication
-4. **CORS**: Configure CORS settings for your domain
-5. **Rate Limiting**: Implement rate limiting for API endpoints
+Your app is ready for production deployment on Vercel with:
+- ✅ Next.js 15.5.2
+- ✅ React 19.1.1
+- ✅ TypeScript support
+- ✅ Optimized build
+- ✅ All dependencies resolved
+- ✅ Secrets scanning compliant
 
-## Monitoring
-
-1. **Vercel Analytics**: Enable for performance monitoring
-2. **Error Tracking**: Consider adding Sentry or similar service
-3. **Database Monitoring**: Monitor Supabase usage and performance
-4. **Payment Monitoring**: Track payment success/failure rates
-
-## Updates and Maintenance
-
-1. **Regular Updates**: Keep dependencies updated
-2. **Database Migrations**: Test migrations in staging first
-3. **Environment Sync**: Keep environment variables in sync
-4. **Backup Strategy**: Regular database backups
-5. **Monitoring**: Set up alerts for critical issues
+Happy deploying! 🚀
