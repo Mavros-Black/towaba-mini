@@ -1,4 +1,4 @@
-<!-- # Event Voting App 🗳️
+# Event Voting App 🗳️
 
 A modern, production-ready platform for managing and voting in events and campaigns. Built with Next.js 14, TypeScript, TailwindCSS, and integrated with payment gateways for secure voting.
 
@@ -265,4 +265,4 @@ For support and questions:
 
 ---
 
-Built with ❤️ for the community -->
+Built with ❤️ for the community

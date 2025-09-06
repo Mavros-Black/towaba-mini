@@ -12,7 +12,7 @@ async function main() {
     create: {
       email: 'admin@example.com',
       name: 'Admin User',
-      password: 'hashed_password_here', // In production, use proper password hashing
+      password: 'example_password_hash', // In production, use proper password hashing
     },
   })
 
@@ -22,7 +22,7 @@ async function main() {
     create: {
       email: 'organizer@example.com',
       name: 'Event Organizer',
-      password: 'hashed_password_here',
+      password: 'example_password_hash',
     },
   })
 
@@ -32,7 +32,7 @@ async function main() {
     create: {
       email: 'voter@example.com',
       name: 'Test Voter',
-      password: 'hashed_password_here',
+      password: 'example_password_hash',
     },
   })
 
