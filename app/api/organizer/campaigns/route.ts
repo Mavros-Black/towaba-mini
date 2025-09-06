@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         allow_editing: allowEditing,
         show_vote_counts: showVoteCounts,
         show_voter_names: showVoterNames,
-        organizer_id: organizerId,
+        organizer_id: user.id,
         status: campaignStatus
       })
       .select()

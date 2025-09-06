@@ -135,8 +135,24 @@ export default function HowToPage() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-violet-900/20 dark:to-slate-800 relative overflow-hidden">
+        {/* Background Design */}
+        <div className="absolute inset-0 opacity-35">
+          {/* Diamond and Star Shapes */}
+          <div className="absolute top-20 left-20 w-32 h-32 bg-violet-500 rotate-45 blur-2xl"></div>
+          <div className="absolute top-32 right-32 w-28 h-28 bg-purple-500 rounded-full blur-xl"></div>
+          <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-pink-500 rotate-45 blur-3xl"></div>
+          <div className="absolute bottom-20 right-1/3 w-24 h-24 bg-fuchsia-500 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 left-12 w-20 h-20 bg-violet-400 rotate-45 blur-xl"></div>
+          <div className="absolute top-1/3 right-12 w-16 h-16 bg-purple-400 rounded-full blur-lg"></div>
+          <div className="absolute bottom-1/3 left-1/2 w-28 h-28 bg-pink-400 rotate-45 blur-xl"></div>
+          <div className="absolute top-2/3 right-1/4 w-18 h-18 bg-fuchsia-400 rounded-full blur-lg"></div>
+          <div className="absolute top-1/4 left-1/3 w-22 h-22 bg-violet-300 rotate-45 blur-lg"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-20 h-20 bg-purple-300 rounded-full blur-lg"></div>
+          <div className="absolute top-3/4 left-1/5 w-26 h-26 bg-pink-300 rotate-45 blur-xl"></div>
+          <div className="absolute bottom-1/5 right-1/5 w-14 h-14 bg-fuchsia-300 rounded-full blur-lg"></div>
+        </div>
+        <div className="max-w-7xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

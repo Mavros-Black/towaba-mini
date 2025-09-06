@@ -1,6 +1,12 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+
+// Utility function to format amount without unnecessary decimals
+const formatAmount = (amountInPesewas: number): string => {
+  const amountInGHS = amountInPesewas / 100
+  return amountInGHS % 1 === 0 ? amountInGHS.toString() : amountInGHS.toFixed(2)
+}
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -84,7 +90,7 @@ export default function CampaignViewPage() {
       console.log('Full campaign data received:', data)
       console.log('Amount per vote debug:', {
         raw_value: data.campaign.amount_per_vote,
-        display_value: data.campaign.amount_per_vote ? (data.campaign.amount_per_vote / 100).toFixed(2) : 'null',
+        display_value: data.campaign.amount_per_vote ? formatAmount(data.campaign.amount_per_vote) : 'null',
         require_payment: data.campaign.require_payment
       })
       setCampaign(data.campaign)
@@ -200,7 +206,7 @@ export default function CampaignViewPage() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
-                  {campaign.require_payment !== false ? `${((campaign.amount_per_vote || 100) / 100).toFixed(2)} GHS` : 'Free'}
+                  {campaign.require_payment !== false && campaign.amount_per_vote ? `${formatAmount(campaign.amount_per_vote)} GHS` : 'Free'}
                 </div>
                 <div className="text-sm text-muted-foreground">Per Vote</div>
               </div>
@@ -325,7 +331,7 @@ export default function CampaignViewPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Amount per Vote:</span>
                       <Badge variant="outline">
-                        {(campaign.amount_per_vote / 100).toFixed(2)} GHS
+                        {formatAmount(campaign.amount_per_vote)} GHS
                       </Badge>
                     </div>
                   )}

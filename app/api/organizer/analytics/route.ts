@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch campaigns' }, { status: 500 })
     }
 
-    const campaignIds = campaigns?.map(c => c.id) || []
+    const campaignIds = campaigns?.map((c: any) => c.id) || []
 
     if (campaignIds.length === 0) {
       return NextResponse.json({
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
         created_at,
         campaign_id,
         nominee_id,
-        nominees!inner(name),
-        campaigns!inner(title)
+        nominees(name),
+        campaigns(title)
       `)
       .in('campaign_id', campaignIds)
       .eq('status', 'SUCCESS')
@@ -65,24 +65,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate basic stats
-    const totalVotes = votes?.length || 0
-    const totalRevenue = votes?.reduce((sum, v) => sum + (v.amount || 0), 0) || 0
+    const totalVotes = votes?.reduce((sum: number, v: any) => sum + Math.floor((v.amount || 0) / 100), 0) || 0
+    const totalRevenue = votes?.reduce((sum: number, v: any) => sum + (v.amount || 0), 0) || 0
     const totalEarnings = Math.floor(totalRevenue * 0.85) // 85% to organizer
-    const activeCampaigns = campaigns?.filter(c => {
+    const activeCampaigns = campaigns?.filter((c: any) => {
       const endDate = new Date(c.end_date)
       return endDate > new Date()
     }).length || 0
 
     // Campaign performance
-    const campaignPerformance = campaigns?.map(campaign => {
-      const campaignVotes = votes?.filter(v => v.campaign_id === campaign.id) || []
-      const campaignRevenue = campaignVotes.reduce((sum, v) => sum + (v.amount || 0), 0)
+    const campaignPerformance = campaigns?.map((campaign: any) => {
+      const campaignVotes = votes?.filter((v: any) => v.campaign_id === campaign.id) || []
+      const campaignRevenue = campaignVotes.reduce((sum: number, v: any) => sum + (v.amount || 0), 0)
       const campaignEarnings = Math.floor(campaignRevenue * 0.85)
       
       return {
         id: campaign.id,
         title: campaign.title,
-        totalVotes: campaignVotes.length,
+        totalVotes: campaignVotes.reduce((sum: number, v: any) => sum + Math.floor((v.amount || 0) / 100), 0),
         totalRevenue: campaignRevenue,
         totalEarnings: campaignEarnings,
         created_at: campaign.created_at,
@@ -98,17 +98,17 @@ export async function GET(request: NextRequest) {
       const monthStart = new Date(date.getFullYear(), date.getMonth(), 1)
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0)
       
-      const monthVotes = votes?.filter(v => {
+      const monthVotes = votes?.filter((v: any) => {
         const voteDate = new Date(v.created_at)
         return voteDate >= monthStart && voteDate <= monthEnd
       }) || []
       
-      const monthRevenue = monthVotes.reduce((sum, v) => sum + (v.amount || 0), 0)
+      const monthRevenue = monthVotes.reduce((sum: number, v: any) => sum + (v.amount || 0), 0)
       const monthEarnings = Math.floor(monthRevenue * 0.85)
       
       monthlyStats.push({
         month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        votes: monthVotes.length,
+        votes: monthVotes.reduce((sum: number, v: any) => sum + Math.floor((v.amount || 0) / 100), 0),
         revenue: monthRevenue,
         earnings: monthEarnings
       })
@@ -116,13 +116,13 @@ export async function GET(request: NextRequest) {
 
     // Top nominees across all campaigns
     const nomineeStats = new Map()
-    votes?.forEach(vote => {
-      const nomineeName = vote.nominees?.[0]?.name || 'Unknown'
+    votes?.forEach((vote: any) => {
+      const nomineeName = vote.nominees?.name || 'Unknown'
       if (!nomineeStats.has(nomineeName)) {
         nomineeStats.set(nomineeName, { name: nomineeName, votes: 0, revenue: 0 })
       }
       const stats = nomineeStats.get(nomineeName)
-      stats.votes += 1
+      stats.votes += Math.floor((vote.amount || 0) / 100)
       stats.revenue += vote.amount || 0
     })
 

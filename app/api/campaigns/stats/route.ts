@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(request: Request) {
   try {
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
       )
     }
 
-    const campaignIds = userCampaigns?.map(c => c.id) || []
+    const campaignIds = userCampaigns?.map((c: any) => c.id) || []
     
     // If user has no campaigns, return zero counts
     if (campaignIds.length === 0) {
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
     }
 
     // Calculate total votes based on amount paid (amount in pesewas / 100 = votes)
-    const totalVotes = votes?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
+    const totalVotes = votes?.reduce((sum: number, vote: any) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
 
     console.log('Total votes count (based on amounts):', totalVotes)
     console.log('Campaign IDs for vote counting:', campaignIds)
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
       )
     }
 
-    const totalRevenue = revenueVotes?.reduce((sum, vote) => sum + (vote.amount || 0), 0) || 0
+    const totalRevenue = revenueVotes?.reduce((sum: number, vote: any) => sum + (vote.amount || 0), 0) || 0
 
     // Monthly growth (campaigns created this month vs last month)
     const now = new Date()

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(
   request: NextRequest,
@@ -50,7 +50,7 @@ export async function GET(
     }
 
     // Transform the data to match the expected format
-    const transformedCategories = categories?.map(category => ({
+    const transformedCategories = categories?.map((category: any) => ({
       id: category.id,
       name: category.name,
       nominees: category.nominees || []

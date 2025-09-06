@@ -411,7 +411,7 @@ export default function EditCampaignPage() {
         coverImage: coverImageUrl,
         startDate: formData.startDate,
         endDate: formData.endDate,
-        amountPerVote: formData.amountPerVote * 100, // Convert GHS to pesewas
+        amountPerVote: formData.amountPerVote, // Send GHS amount, API will convert to pesewas
         isPublic: formData.isPublic,
         allowAnonymousVoting: formData.allowAnonymousVoting,
         maxVotesPerUser: formData.maxVotesPerUser,

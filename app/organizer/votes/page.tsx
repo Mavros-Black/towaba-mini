@@ -1,6 +1,15 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+
+// Utility function for number formatting
+const formatNumber = (num: number): string => {
+  return num.toLocaleString()
+}
+
+const formatCurrency = (amount: number): string => {
+  return `₵${(amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -257,7 +266,7 @@ export default function VotesPage() {
               <div className="text-sm text-green-200">Successful</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold">₵{(totalRevenue / 100).toFixed(2)}</div>
+              <div className="text-3xl font-bold">{formatCurrency(totalRevenue)}</div>
               <div className="text-sm text-green-200">Total Revenue</div>
             </div>
           </div>
@@ -411,7 +420,7 @@ export default function VotesPage() {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => [`₵${((value as number) / 100).toFixed(2)}`, 'Revenue']}
+                      formatter={(value) => [formatCurrency((value as number) * 100), 'Revenue']}
                     />
                     <Line 
                       type="monotone" 
@@ -487,7 +496,7 @@ export default function VotesPage() {
                         <td className="px-4 py-4">
                           <div className="text-right">
                             <p className="text-sm font-bold text-gray-900">
-                              ₵{(transaction.amount / 100).toFixed(2)}
+                              {formatCurrency(transaction.amount)}
                             </p>
                             <p className="text-xs text-gray-500">
                               {transaction.amount} pesewas

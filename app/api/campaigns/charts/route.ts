@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(request: Request) {
   try {
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       )
     }
 
-    const campaignIds = userCampaigns?.map(c => c.id) || []
+    const campaignIds = userCampaigns?.map((c: any) => c.id) || []
     
     // If user has no campaigns, return empty data
     if (campaignIds.length === 0) {
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
         }
 
         // Calculate votes based on amount paid (amount in pesewas / 100 = votes)
-        const votes = votesData?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
+        const votes = votesData?.reduce((sum: number, vote: any) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
 
         // Revenue for this month (successful vote amounts) from the current user's campaigns only
         const { data: revenueVotes, error: revenueError } = await supabase
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
           console.error(`Error fetching revenue votes for ${month.name}:`, revenueError)
         }
 
-        const revenue = revenueVotes?.reduce((sum, vote) => sum + (vote.amount || 0), 0) || 0
+        const revenue = revenueVotes?.reduce((sum: number, vote: any) => sum + (vote.amount || 0), 0) || 0
 
         // Campaigns created this month by the current user only
         const { count: campaigns, error: campaignsError } = await supabase
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
     }
 
     const pieData = await Promise.all(
-      (topCampaigns || []).map(async (campaign, index) => {
+      (topCampaigns || []).map(async (campaign: any, index: number) => {
         // Get total votes for this campaign based on amounts paid
         const { data: votesData, error: votesError } = await supabase
           .from('votes')
@@ -147,7 +147,7 @@ export async function GET(request: Request) {
           console.error(`Error fetching votes for campaign ${campaign.id}:`, votesError)
         }
 
-        const totalVotes = votesData?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
+        const totalVotes = votesData?.reduce((sum: number, vote: any) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
 
         return {
           name: campaign.title.length > 15 ? campaign.title.substring(0, 15) + '...' : campaign.title,

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Users, Award, Calendar, TrendingUp, Loader2, FolderOpen, Target, DollarSign, BarChart3, PieChart, Activity, CreditCard, Shield } from 'lucide-react'
+import { Plus, Users, Award, Calendar, TrendingUp, Loader2, FolderOpen, Target, BarChart3, PieChart, Activity, CreditCard, Shield, RefreshCw, Coins } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
@@ -39,10 +39,33 @@ interface PieData {
   color: string
 }
 
+interface RecentActivity {
+  id: string
+  type: string
+  title: string
+  description: string
+  timestamp: string
+  icon: string
+  color: string
+  amount?: number
+  status?: string
+}
+
+// Utility function for number formatting
+const formatNumber = (num: number): string => {
+  return num.toLocaleString()
+}
+
+const formatCurrency = (amount: number): string => {
+  return `₵${(amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 export default function DashboardPage() {
   const { user, session, loading } = useAuth()
   const router = useRouter()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   const [stats, setStats] = useState({
     totalCampaigns: 0,
@@ -53,6 +76,7 @@ export default function DashboardPage() {
   })
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [pieData, setPieData] = useState<PieData[]>([])
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [areaData, setAreaData] = useState<ChartData[]>([])
   const [chartsLoading, setChartsLoading] = useState(true)
 
@@ -64,11 +88,32 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (session?.access_token) {
-      fetchCampaigns()
-      fetchStats()
-      fetchChartData()
+      fetchAllData()
     }
   }, [session])
+
+
+  const fetchAllData = async (silent = false) => {
+    if (!silent) {
+      setIsRefreshing(true)
+    }
+    
+    try {
+      await Promise.all([
+        fetchCampaigns(),
+        fetchStats(),
+        fetchChartData(),
+        fetchRecentActivity()
+      ])
+      setLastUpdated(new Date())
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      if (!silent) {
+        setIsRefreshing(false)
+      }
+    }
+  }
 
   const fetchCampaigns = async () => {
     try {
@@ -103,6 +148,24 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
+    }
+  }
+
+  const fetchRecentActivity = async () => {
+    try {
+      if (!session?.access_token) return
+      
+      const response = await fetch('/api/organizer/recent-activity', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setRecentActivity(data.activities || [])
+      }
+    } catch (error) {
+      console.error('Error fetching recent activity:', error)
     }
   }
 
@@ -183,13 +246,65 @@ export default function DashboardPage() {
     )
   }
 
+  // Helper functions for recent activity
+  const getTimeAgo = (timestamp: string) => {
+    const now = new Date()
+    const time = new Date(timestamp)
+    const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
+    
+    if (diffInSeconds < 60) return 'Just now'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`
+    return time.toLocaleDateString()
+  }
+
+  const getActivityBgColor = (color: string) => {
+    switch (color) {
+      case 'green': return 'bg-green-50 dark:bg-green-900/20'
+      case 'blue': return 'bg-blue-50 dark:bg-blue-900/20'
+      case 'purple': return 'bg-purple-50 dark:bg-purple-900/20'
+      case 'orange': return 'bg-orange-50 dark:bg-orange-900/20'
+      case 'red': return 'bg-red-50 dark:bg-red-900/20'
+      default: return 'bg-gray-50 dark:bg-gray-900/20'
+    }
+  }
+
+  const getActivityDotColor = (color: string) => {
+    switch (color) {
+      case 'green': return 'bg-green-500'
+      case 'blue': return 'bg-blue-500'
+      case 'purple': return 'bg-purple-500'
+      case 'orange': return 'bg-orange-500'
+      case 'red': return 'bg-red-500'
+      default: return 'bg-gray-500'
+    }
+  }
+
   return (
     <DashboardWrapper>
       <div className="space-y-8">
         {/* Enhanced Header */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
+        <div className="relative text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
+          <div className="absolute top-4 right-4">
+            <Button
+              onClick={() => fetchAllData()}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
           <h1 className="text-4xl font-bold mb-3">Welcome back, {user?.email?.split('@')[0] || 'User'}</h1>
           <p className="text-xl text-blue-100">Your voting campaigns overview</p>
+          {lastUpdated && (
+            <p className="text-sm text-blue-200 mt-2">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
         </div>
 
         {/* Key Metrics Grid */}
@@ -201,7 +316,7 @@ export default function DashboardPage() {
                 <FolderOpen className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                  <div className="text-3xl font-bold text-blue-600">{stats.totalCampaigns}</div>
+                  <div className="text-3xl font-bold text-blue-600">{formatNumber(stats.totalCampaigns)}</div>
                   <div className="text-sm text-muted-foreground">Total Campaigns</div>
                   <div className="text-xs text-green-600 font-medium">+{stats.monthlyGrowth}% this month</div>
                 </div>
@@ -217,7 +332,7 @@ export default function DashboardPage() {
                   <Users className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                  <div className="text-3xl font-bold text-purple-600">{stats.totalNominees}</div>
+                  <div className="text-3xl font-bold text-purple-600">{formatNumber(stats.totalNominees)}</div>
                   <div className="text-sm text-muted-foreground">Total Nominees</div>
                   <div className="text-xs text-green-600 font-medium">Across all campaigns</div>
                 </div>
@@ -232,7 +347,7 @@ export default function DashboardPage() {
                   <Award className="w-6 h-6 text-orange-600" />
               </div>
               <div>
-                  <div className="text-3xl font-bold text-orange-600">{stats.totalVotes}</div>
+                  <div className="text-3xl font-bold text-orange-600">{formatNumber(stats.totalVotes)}</div>
                   <div className="text-sm text-muted-foreground">Total Votes</div>
                   <div className="text-xs text-green-600 font-medium">Based on amount paid</div>
                 </div>
@@ -244,10 +359,10 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-yellow-600" />
+                  <Coins className="w-6 h-6 text-yellow-600" />
       </div>
               <div>
-                  <div className="text-3xl font-bold text-yellow-600">₵{(stats.totalRevenue / 100).toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-yellow-600">{formatCurrency(stats.totalRevenue)}</div>
                   <div className="text-sm text-muted-foreground">Total Revenue</div>
                   <div className="text-xs text-green-600 font-medium">+8% from last month</div>
                 </div>
@@ -283,7 +398,7 @@ export default function DashboardPage() {
                     <YAxis yAxisId="right" orientation="right" />
                     <Tooltip 
                       formatter={(value, name) => [
-                        name === 'votes' ? `${value} votes (₵${value})` : `₵${((value as number) / 100).toFixed(2)}`,
+                        name === 'votes' ? `${formatNumber(value as number)} votes (${formatCurrency((value as number) * 100)})` : formatCurrency((value as number) * 100),
                         name === 'votes' ? 'Votes (Amount Paid)' : 'Revenue'
                       ]}
                     />
@@ -377,7 +492,7 @@ export default function DashboardPage() {
                   <YAxis />
                   <Tooltip 
                     formatter={(value, name) => [
-                      name === 'votes' ? `${value} votes (₵${value})` : name === 'revenue' ? `₵${((value as number) / 100).toFixed(2)}` : `${value} campaigns`,
+                      name === 'votes' ? `${formatNumber(value as number)} votes (${formatCurrency((value as number) * 100)})` : name === 'revenue' ? formatCurrency((value as number) * 100) : `${formatNumber(value as number)} campaigns`,
                       name === 'votes' ? 'Votes (Amount Paid)' : name === 'revenue' ? 'Revenue' : 'Campaigns'
                     ]}
                   />
@@ -449,7 +564,7 @@ export default function DashboardPage() {
               </Link>
               <Link href="/organizer/payments">
                 <Button variant="outline" className="w-full border-2 hover:bg-gray-50" size="lg">
-                  <DollarSign className="w-5 h-5 mr-2" />
+                  <Coins className="w-5 h-5 mr-2" />
                   View Payments
                 </Button>
               </Link>
@@ -466,28 +581,30 @@ export default function DashboardPage() {
               <CardDescription>Latest updates and actions</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">New campaign created</p>
-                    <p className="text-xs text-muted-foreground">2 hours ago</p>
+              <div className="max-h-80 overflow-y-auto space-y-3 pr-2">
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity) => {
+                    const timeAgo = getTimeAgo(activity.timestamp)
+                    const bgColor = getActivityBgColor(activity.color)
+                    const dotColor = getActivityDotColor(activity.color)
+                    
+                    return (
+                      <div key={activity.id} className={`flex items-center space-x-3 p-3 ${bgColor} rounded-lg`}>
+                        <div className={`w-2 h-2 ${dotColor} rounded-full`}></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{activity.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{activity.description}</p>
+                          <p className="text-xs text-muted-foreground">{timeAgo}</p>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No recent activity</p>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">50 new votes received</p>
-                    <p className="text-xs text-muted-foreground">4 hours ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Payment processed</p>
-                    <p className="text-xs text-muted-foreground">1 day ago</p>
-                  </div>
-              </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -531,9 +648,9 @@ export default function DashboardPage() {
                         {campaign.description || 'No description'}
                       </p>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
-                        <span>{campaign._count?.nominees || 0} nominees</span>
-                        <span>{campaign._count?.voters || 0} votes</span>
-                        <span>{campaign._count?.categories || 0} categories</span>
+                        <span>{formatNumber(campaign._count?.nominees || 0)} nominees</span>
+                        <span>{formatNumber(campaign._count?.voters || 0)} votes</span>
+                        <span>{formatNumber(campaign._count?.categories || 0)} categories</span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">

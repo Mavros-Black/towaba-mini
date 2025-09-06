@@ -1,6 +1,15 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+
+// Utility function for number formatting
+const formatNumber = (num: number): string => {
+  return num.toLocaleString()
+}
+
+const formatCurrency = (amount: number): string => {
+  return `₵${(amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +36,7 @@ import { useRouter } from 'next/navigation'
 import { DashboardWrapper } from '@/components/dashboard-wrapper'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { PayoutRequestModal } from '@/components/payout-request-modal'
 
 interface Transaction {
   id: string
@@ -285,7 +295,20 @@ export default function PaymentsPage() {
     setPayoutRequests(samplePayouts)
   }
 
-  const createPayoutRequest = async (requestType: 'DAILY' | 'WEEKLY' | 'END_OF_PROGRAM') => {
+  const createPayoutRequest = async (payoutData: {
+    amount: number
+    request_type: 'DAILY' | 'WEEKLY' | 'END_OF_PROGRAM'
+    bank_details: {
+      payment_method?: 'bank' | 'mobile_money'
+      account_name?: string
+      account_number?: string
+      bank_name?: string
+      branch?: string
+      mobile_network?: string
+      mobile_number?: string
+      notes?: string
+    }
+  }) => {
     try {
       if (!session?.access_token) return
       
@@ -297,15 +320,7 @@ export default function PaymentsPage() {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          amount: stats.availableBalance,
-          request_type: requestType,
-          bank_details: {
-            account_name: user?.email?.split('@')[0] || 'Organizer',
-            account_number: '1234567890', // This should come from user settings
-            bank_name: 'Ghana Commercial Bank'
-          }
-        })
+        body: JSON.stringify(payoutData)
       })
       
       if (response.ok) {
@@ -314,7 +329,7 @@ export default function PaymentsPage() {
         await fetchPayoutRequests()
         // Refresh stats
         await fetchPaymentStats()
-        alert(`Payout request created successfully! Amount: ₵${(data.payoutRequest.amount / 100).toFixed(2)}`)
+        alert(`Payout request created successfully! Amount: ${formatCurrency(data.payoutRequest.amount)}`)
       } else {
         const error = await response.json()
         alert(`Failed to create payout request: ${error.error}`)
@@ -415,7 +430,7 @@ export default function PaymentsPage() {
                   <DollarSign className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-600">₵{(stats.totalEarnings / 100).toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-green-600">{formatCurrency(stats.totalEarnings)}</div>
                   <div className="text-sm text-muted-foreground">Total Earnings</div>
                   <div className="text-xs text-green-600 font-medium">+{stats.monthlyGrowth}% this month</div>
                 </div>
@@ -430,7 +445,7 @@ export default function PaymentsPage() {
                   <CreditCard className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-blue-600">₵{(stats.availableBalance / 100).toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-blue-600">{formatCurrency(stats.availableBalance)}</div>
                   <div className="text-sm text-muted-foreground">Available Balance</div>
                   <div className="text-xs text-blue-600 font-medium">Ready for payout</div>
                 </div>
@@ -445,7 +460,7 @@ export default function PaymentsPage() {
                   <TrendingUp className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-purple-600">₵{(stats.processedPayouts / 100).toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-purple-600">{formatCurrency(stats.processedPayouts)}</div>
                   <div className="text-sm text-muted-foreground">Processed Payouts</div>
                   <div className="text-xs text-purple-600 font-medium">Successfully paid out</div>
                 </div>
@@ -460,7 +475,7 @@ export default function PaymentsPage() {
                   <Clock className="w-6 h-6 text-orange-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-orange-600">₵{(stats.pendingPayouts / 100).toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-orange-600">{formatCurrency(stats.pendingPayouts)}</div>
                   <div className="text-sm text-muted-foreground">Pending Payouts</div>
                   <div className="text-xs text-orange-600 font-medium">Awaiting processing</div>
                 </div>
@@ -487,7 +502,7 @@ export default function PaymentsPage() {
                     <span className="font-medium text-gray-900">Your Earnings</span>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-green-600">₵{(stats.totalEarnings / 100).toFixed(2)}</div>
+                    <div className="font-bold text-green-600">{formatCurrency(stats.totalEarnings)}</div>
                     <div className="text-sm text-gray-600">85% of total revenue</div>
                   </div>
                 </div>
@@ -497,7 +512,7 @@ export default function PaymentsPage() {
                     <span className="font-medium text-gray-900">Platform Fee</span>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-orange-600">₵{(stats.totalPlatformFees / 100).toFixed(2)}</div>
+                    <div className="font-bold text-orange-600">{formatCurrency(stats.totalPlatformFees)}</div>
                     <div className="text-sm text-gray-600">{stats.commissionRate}% commission</div>
                   </div>
                 </div>
@@ -520,31 +535,24 @@ export default function PaymentsPage() {
               <CardDescription>Request payouts and manage your earnings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                onClick={() => createPayoutRequest('DAILY')}
-                disabled={isCreatingPayout || stats.availableBalance <= 0}
+              <PayoutRequestModal
+                availableBalance={stats.availableBalance}
+                onPayoutRequested={createPayoutRequest}
+                isCreating={isCreatingPayout}
               >
-                <DollarSign className="w-4 h-4 mr-2" />
-                {isCreatingPayout ? 'Creating...' : 'Request Daily Payout'}
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => createPayoutRequest('WEEKLY')}
-                disabled={isCreatingPayout || stats.availableBalance <= 0}
-              >
-                <Calendar className="w-4 h-4 mr-2" />
-                {isCreatingPayout ? 'Creating...' : 'Request Weekly Payout'}
-              </Button>
-              <Button 
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                onClick={() => createPayoutRequest('END_OF_PROGRAM')}
-                disabled={isCreatingPayout || stats.availableBalance <= 0}
-              >
-                <Award className="w-4 h-4 mr-2" />
-                {isCreatingPayout ? 'Creating...' : 'End of Program Payout'}
-              </Button>
+                <Button 
+                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                  disabled={stats.availableBalance <= 0}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Request Payout
+                </Button>
+              </PayoutRequestModal>
+              
+              <div className="text-center text-sm text-gray-600">
+                <p>Available Balance: <strong>{formatCurrency(stats.availableBalance)}</strong></p>
+                <p className="text-xs mt-1">Commission already deducted from earnings</p>
+              </div>
               <Button variant="outline" className="w-full">
                 <Download className="w-4 h-4 mr-2" />
                 Export Earnings Report
@@ -552,7 +560,7 @@ export default function PaymentsPage() {
               <div className="space-y-3">
                 <div className="p-3 bg-yellow-50 rounded-lg">
                   <p className="text-sm text-yellow-700">
-                    <strong>Available Balance:</strong> ₵{(stats.availableBalance / 100).toFixed(2)} ready for payout
+                    <strong>Available Balance:</strong> {formatCurrency(stats.availableBalance)} ready for payout
                   </p>
                 </div>
                 <div className="p-3 bg-purple-50 rounded-lg">
@@ -590,7 +598,7 @@ export default function PaymentsPage() {
                     {getStatusIcon(payout.status)}
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-semibold">₵{(payout.amount / 100).toFixed(2)}</h4>
+                        <h4 className="font-semibold">{formatCurrency(payout.amount)}</h4>
                         {getStatusBadge(payout.status)}
                         {payout.request_type === 'END_OF_PROGRAM' ? (
                           <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-200">
@@ -698,11 +706,11 @@ export default function PaymentsPage() {
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
                           {getMethodIcon(transaction.method)}
-                          <span className="font-bold text-lg">₵{(transaction.amount / 100).toFixed(2)}</span>
+                          <span className="font-bold text-lg">{formatCurrency(transaction.amount)}</span>
                         </div>
                         <div className="text-sm">
-                          <div className="text-green-600 font-medium">Earned: ₵{(transaction.organizer_earnings / 100).toFixed(2)}</div>
-                          <div className="text-orange-600 text-xs">Fee: ₵{(transaction.platform_fee / 100).toFixed(2)}</div>
+                          <div className="text-green-600 font-medium">Earned: {formatCurrency(transaction.organizer_earnings)}</div>
+                          <div className="text-orange-600 text-xs">Fee: {formatCurrency(transaction.platform_fee)}</div>
                         </div>
                         <p className="text-xs text-muted-foreground">{transaction.method}</p>
                       </div>

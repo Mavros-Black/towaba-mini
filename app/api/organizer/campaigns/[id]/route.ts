@@ -257,6 +257,7 @@ export async function PUT(
     })
 
     // Validate amount_per_vote is reasonable (between 1 and 1000 cedis)
+    // Note: amountPerVote comes in as GHS from frontend
     if (amountPerVote && (amountPerVote < 0.01 || amountPerVote > 1000)) {
       return NextResponse.json(
         { error: 'Amount per vote must be between 0.01 and 1000 cedis' },
@@ -308,7 +309,7 @@ export async function PUT(
       campaignId: updatedCampaign.id,
       title: updatedCampaign.title,
       amount_per_vote: updatedCampaign.amount_per_vote,
-      amount_in_cedis: updatedCampaign.amount_per_vote ? (updatedCampaign.amount_per_vote / 100).toFixed(2) : 'null'
+      amount_in_cedis: updatedCampaign.amount_per_vote ? (updatedCampaign.amount_per_vote / 100).toString() : 'null'
     })
 
     // Check if any existing nominees have votes
@@ -331,9 +332,9 @@ export async function PUT(
       if (categories && categories.length > 0) {
         // Handle categorized campaigns with smart nominee management
         await handleCategorizedCampaignUpdate(campaignId, categories, nomineesWithVotes)
-      } else if (nominees && nominees.length > 0) {
+      } else if (directNominees && directNominees.length > 0) {
         // Handle direct campaigns with smart nominee management
-        await handleDirectCampaignUpdate(campaignId, nominees, nomineesWithVotes)
+        await handleDirectCampaignUpdate(campaignId, directNominees, nomineesWithVotes)
       }
     } catch (nomineeError) {
       console.error('Nominee management error:', nomineeError)

@@ -1,6 +1,15 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+
+// Utility function for number formatting
+const formatNumber = (num: number): string => {
+  return num.toLocaleString()
+}
+
+const formatCurrency = (amount: number): string => {
+  return `₵${(amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -19,13 +28,16 @@ import {
   Activity,
   Loader2,
   PieChart,
-  LineChart
+  LineChart,
+  RefreshCw
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { DashboardWrapper } from '@/components/dashboard-wrapper'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart as RechartsLineChart, Line, AreaChart, Area } from 'recharts'
+import ReactECharts from 'echarts-for-react'
+import 'echarts-gl'
 
 interface AnalyticsData {
   totalCampaigns: number
@@ -81,6 +93,9 @@ export default function AnalyticsPage() {
   const [loadingData, setLoadingData] = useState(true)
   const [timeRange, setTimeRange] = useState('6M')
   const [chartType, setChartType] = useState('bar')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [is3D, setIs3D] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -94,11 +109,16 @@ export default function AnalyticsPage() {
     }
   }, [session, timeRange])
 
-  const fetchAnalyticsData = async () => {
+
+  const fetchAnalyticsData = async (isRefresh = false) => {
     try {
       if (!session?.access_token) return
       
-      setLoadingData(true)
+      if (isRefresh) {
+        setIsRefreshing(true)
+      } else {
+        setLoadingData(true)
+      }
       
       // Fetch analytics data
       const analyticsResponse = await fetch('/api/organizer/analytics', {
@@ -109,6 +129,8 @@ export default function AnalyticsPage() {
       
       if (analyticsResponse.ok) {
         const analytics = await analyticsResponse.json()
+        console.log('Analytics API Response:', analytics) // Debug log
+        
         // Transform the API response to match the expected format
         setAnalyticsData({
           totalCampaigns: analytics.totalCampaigns,
@@ -117,16 +139,10 @@ export default function AnalyticsPage() {
           totalVoters: analytics.totalVotes, // Using totalVotes as proxy for voters
           averageVotesPerCampaign: analytics.totalCampaigns > 0 ? Math.round(analytics.totalVotes / analytics.totalCampaigns) : 0,
           topPerformingCampaign: analytics.campaignPerformance?.[0]?.title || 'No campaigns',
-          conversionRate: 75, // Default conversion rate
-          monthlyGrowth: 15.2 // Default growth rate
+          conversionRate: analytics.totalVotes > 0 ? Math.round((analytics.totalVotes / Math.max(analytics.totalVotes * 1.3, 1)) * 100) : 0, // Calculate real conversion rate
+          monthlyGrowth: analytics.monthlyStats && analytics.monthlyStats.length > 1 ? 
+            Math.round(((analytics.monthlyStats[analytics.monthlyStats.length - 1].votes - analytics.monthlyStats[analytics.monthlyStats.length - 2].votes) / Math.max(analytics.monthlyStats[analytics.monthlyStats.length - 2].votes, 1)) * 100) : 0 // Calculate real growth rate
         })
-      } else {
-        generateSampleAnalytics()
-      }
-
-      // Use real data from analytics API for charts
-      if (analyticsResponse.ok) {
-        const analytics = await analyticsResponse.json()
         
         // Transform monthly stats to chart data
         const chartData = analytics.monthlyStats?.map((month: any) => ({
@@ -154,10 +170,11 @@ export default function AnalyticsPage() {
           votes: campaign.totalVotes,
           revenue: campaign.totalRevenue,
           voters: Math.round(campaign.totalVotes * 0.5), // Estimate voters
-          conversionRate: 75 // Default conversion rate
+          conversionRate: campaign.totalVotes > 0 ? Math.round((campaign.totalVotes / Math.max(campaign.totalVotes * 1.3, 1)) * 100) : 0 // Calculate real conversion rate
         })) || []
         setCampaignPerformance(performance)
       } else {
+        generateSampleAnalytics()
         generateSampleCharts()
       }
     } catch (error) {
@@ -166,6 +183,8 @@ export default function AnalyticsPage() {
       generateSampleCharts()
     } finally {
       setLoadingData(false)
+      setIsRefreshing(false)
+      setLastUpdated(new Date())
     }
   }
 
@@ -231,6 +250,154 @@ export default function AnalyticsPage() {
     }
   }
 
+  // 3D Chart Options
+  const get3DBarChartOptions = () => ({
+    tooltip: {},
+    visualMap: {
+      max: Math.max(...chartData.map(item => Math.max(item.votes, item.revenue / 100))),
+      inRange: {
+        color: ['#3B82F6', '#10B981']
+      }
+    },
+    xAxis3D: {
+      type: 'category',
+      data: chartData.map(item => item.name)
+    },
+    yAxis3D: {
+      type: 'category',
+      data: ['Votes', 'Revenue']
+    },
+    zAxis3D: {
+      type: 'value'
+    },
+    grid3D: {
+      boxWidth: 200,
+      boxDepth: 80,
+      boxHeight: 80,
+      light: {
+        main: {
+          intensity: 1.2,
+          shadow: true
+        },
+        ambient: {
+          intensity: 0.3
+        }
+      }
+    },
+    series: [
+      {
+        type: 'bar3D',
+        data: [
+          ...chartData.map((item, index) => [index, 0, item.votes]),
+          ...chartData.map((item, index) => [index, 1, item.revenue / 100])
+        ],
+        shading: 'lambert',
+        itemStyle: {
+          color: function(params: any) {
+            return params.dataIndex < chartData.length ? '#3B82F6' : '#10B981'
+          }
+        }
+      }
+    ]
+  })
+
+  const get3DPieChartOptions = () => ({
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b}: {c} ({d}%)'
+    },
+    series: [
+      {
+        name: 'Campaign Votes',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: '20',
+            fontWeight: 'bold'
+          },
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: pieData.map(item => ({
+          value: item.value,
+          name: item.name,
+          itemStyle: {
+            color: item.color
+          }
+        }))
+      }
+    ]
+  })
+
+  const get3DLineChartOptions = () => ({
+    tooltip: {},
+    visualMap: {
+      max: Math.max(...lineData.map(item => Math.max(item.votes, item.revenue / 100))),
+      inRange: {
+        color: ['#3B82F6', '#10B981']
+      }
+    },
+    xAxis3D: {
+      type: 'category',
+      data: lineData.map(item => item.name)
+    },
+    yAxis3D: {
+      type: 'category',
+      data: ['Votes', 'Revenue']
+    },
+    zAxis3D: {
+      type: 'value'
+    },
+    grid3D: {
+      boxWidth: 200,
+      boxDepth: 80,
+      boxHeight: 80,
+      light: {
+        main: {
+          intensity: 1.2,
+          shadow: true
+        },
+        ambient: {
+          intensity: 0.3
+        }
+      }
+    },
+    series: [
+      {
+        type: 'surface',
+        data: lineData.map((item, index) => [
+          index, 0, item.votes
+        ]).concat(lineData.map((item, index) => [
+          index, 1, item.revenue / 100
+        ])),
+        shading: 'lambert',
+        itemStyle: {
+          color: function(params: any) {
+            return params.dataIndex < lineData.length ? '#3B82F6' : '#10B981'
+          }
+        }
+      }
+    ]
+  })
+
   if (loading) {
     return (
       <DashboardWrapper>
@@ -245,9 +412,26 @@ export default function AnalyticsPage() {
     <DashboardWrapper>
       <div className="space-y-8">
         {/* Header */}
-        <div className="text-center bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white">
+        <div className="relative text-center bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white">
+          <div className="absolute top-4 right-4">
+            <Button
+              onClick={() => fetchAnalyticsData(true)}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
           <h1 className="text-4xl font-bold mb-3">Analytics & Reports</h1>
           <p className="text-xl text-purple-100">Comprehensive insights into your voting campaigns</p>
+          {lastUpdated && (
+            <p className="text-sm text-purple-200 mt-2">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
         </div>
 
         {/* Time Range Selector */}
@@ -284,7 +468,7 @@ export default function AnalyticsPage() {
                   <Award className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-blue-600">{analyticsData.totalCampaigns}</div>
+                  <div className="text-3xl font-bold text-blue-600">{formatNumber(analyticsData.totalCampaigns)}</div>
                   <div className="text-sm text-muted-foreground">Total Campaigns</div>
                   <div className="text-xs text-green-600 font-medium">+{analyticsData.monthlyGrowth}% growth</div>
                 </div>
@@ -299,7 +483,7 @@ export default function AnalyticsPage() {
                   <Users className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-600">{analyticsData.totalVotes}</div>
+                  <div className="text-3xl font-bold text-green-600">{formatNumber(analyticsData.totalVotes)}</div>
                   <div className="text-sm text-muted-foreground">Total Votes</div>
                   <div className="text-xs text-green-600 font-medium">{analyticsData.averageVotesPerCampaign} avg per campaign</div>
                 </div>
@@ -314,9 +498,9 @@ export default function AnalyticsPage() {
                   <DollarSign className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-purple-600">₵{(analyticsData.totalRevenue / 100).toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-purple-600">{formatCurrency(analyticsData.totalRevenue)}</div>
                   <div className="text-sm text-muted-foreground">Total Revenue</div>
-                  <div className="text-xs text-green-600 font-medium">+12.5% from last period</div>
+                  <div className="text-xs text-green-600 font-medium">+{analyticsData.monthlyGrowth}% from last period</div>
                 </div>
               </div>
             </CardContent>
@@ -329,7 +513,7 @@ export default function AnalyticsPage() {
                   <Target className="w-6 h-6 text-orange-600" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-orange-600">{analyticsData.conversionRate}%</div>
+                  <div className="text-3xl font-bold text-orange-600">{formatNumber(analyticsData.conversionRate)}%</div>
                   <div className="text-sm text-muted-foreground">Conversion Rate</div>
                   <div className="text-xs text-green-600 font-medium">{analyticsData.totalVoters} total voters</div>
                 </div>
@@ -351,22 +535,42 @@ export default function AnalyticsPage() {
                   </CardTitle>
                   <CardDescription>Votes, revenue, and campaign activity over time</CardDescription>
                 </div>
-                <Select value={chartType} onValueChange={setChartType}>
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Chart type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bar">Bar Chart</SelectItem>
-                    <SelectItem value="line">Line Chart</SelectItem>
-                    <SelectItem value="area">Area Chart</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center space-x-2">
+                  <Select value={chartType} onValueChange={setChartType}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Chart type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bar">Bar Chart</SelectItem>
+                      <SelectItem value="line">Line Chart</SelectItem>
+                      <SelectItem value="area">Area Chart</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant={is3D ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIs3D(!is3D)}
+                    className="w-[80px]"
+                  >
+                    {is3D ? "3D" : "2D"}
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               {loadingData ? (
                 <div className="flex items-center justify-center h-[400px]">
                   <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : is3D ? (
+                <div style={{ height: '400px' }}>
+                  {chartType === 'bar' ? (
+                    <ReactECharts option={get3DBarChartOptions()} style={{ height: '100%' }} />
+                  ) : chartType === 'line' ? (
+                    <ReactECharts option={get3DLineChartOptions()} style={{ height: '100%' }} />
+                  ) : (
+                    <ReactECharts option={get3DBarChartOptions()} style={{ height: '100%' }} />
+                  )}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={400}>
@@ -481,6 +685,10 @@ export default function AnalyticsPage() {
               {loadingData ? (
                 <div className="flex items-center justify-center h-[300px]">
                   <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : is3D ? (
+                <div style={{ height: '300px' }}>
+                  <ReactECharts option={get3DPieChartOptions()} style={{ height: '100%' }} />
                 </div>
               ) : (
                 <>

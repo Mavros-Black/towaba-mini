@@ -1,4 +1,4 @@
-.e# Nalo USSD Voting Flow Diagram
+# Nalo USSD Voting Flow Diagram
 
 ## Complete User Journey
 

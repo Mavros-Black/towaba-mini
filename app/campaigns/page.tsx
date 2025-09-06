@@ -27,12 +27,58 @@ interface Campaign {
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [filteredCampaigns, setFilteredCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [sortBy, setSortBy] = useState('')
 
   useEffect(() => {
     fetchCampaigns()
   }, [])
+
+  // Filter and sort campaigns
+  useEffect(() => {
+    let filtered = [...campaigns]
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(campaign =>
+        campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        campaign.organizer?.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Category filter (placeholder - would need category data)
+    if (categoryFilter) {
+      // For now, we'll skip category filtering since we don't have category data in the campaign object
+      // This would need to be implemented when category data is available
+    }
+
+    // Sort campaigns
+    if (sortBy) {
+      switch (sortBy) {
+        case 'newest':
+          filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          break
+        case 'oldest':
+          filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          break
+        case 'popular':
+          filtered.sort((a, b) => (b._count?.nominees || 0) - (a._count?.nominees || 0))
+          break
+        case 'name':
+          filtered.sort((a, b) => a.title.localeCompare(b.title))
+          break
+        default:
+          break
+      }
+    }
+
+    setFilteredCampaigns(filtered)
+  }, [campaigns, searchTerm, categoryFilter, sortBy])
 
   const fetchCampaigns = async () => {
     try {
@@ -121,6 +167,8 @@ export default function CampaignsPage() {
                 <input
                   type="text"
                   placeholder="Search campaigns..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <svg
@@ -141,7 +189,11 @@ export default function CampaignsPage() {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-3">
-              <select className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <select 
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
                 <option value="">All Categories</option>
                 <option value="beauty">Beauty</option>
                 <option value="talent">Talent</option>
@@ -149,7 +201,11 @@ export default function CampaignsPage() {
                 <option value="sports">Sports</option>
               </select>
               
-              <select className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
                 <option value="">Sort By</option>
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -157,33 +213,46 @@ export default function CampaignsPage() {
                 <option value="name">Name A-Z</option>
               </select>
 
-              <button className="px-4 py-3 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">
+              <button 
+                onClick={() => {
+                  setSearchTerm('')
+                  setCategoryFilter('')
+                  setSortBy('')
+                }}
+                className="px-4 py-3 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                title="Clear all filters"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
         </div>
 
-        {campaigns.length === 0 ? (
+        {filteredCampaigns.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-24 h-24 bg-muted rounded-full mx-auto mb-4 flex items-center justify-center">
               <Calendar className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-semibold mb-2">No campaigns yet</h2>
+            <h2 className="text-2xl font-semibold mb-2">
+              {searchTerm || categoryFilter || sortBy ? 'No campaigns found' : 'No campaigns yet'}
+            </h2>
             <p className="text-muted-foreground mb-6">
-              Check back later for exciting voting campaigns!
+              {searchTerm || categoryFilter || sortBy 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'Check back later for exciting voting campaigns!'
+              }
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {campaigns.map((campaign) => (
+            {filteredCampaigns.map((campaign) => (
               <Card key={campaign.id} className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <div className="aspect-video bg-muted rounded-t-lg mb-4 flex items-center justify-center">
-                  {(campaign as any).image_url ? (
+                  {campaign.cover_image ? (
                     <img
-                      src={(campaign as any).image_url}
+                      src={campaign.cover_image}
                       alt={campaign.title}
                       className="w-full h-full object-cover rounded-t-lg"
                     />

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(request: Request) {
   try {
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
     // Fetch counts for each campaign
     const campaignsWithCounts = await Promise.all(
-      campaigns?.map(async (campaign) => {
+      campaigns?.map(async (campaign: any) => {
         // Get categories count
         const { count: categoriesCount } = await supabase
           .from('categories')
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
         }
 
         // Calculate total votes based on amount paid (amount in pesewas / 100 = votes)
-        const totalVoteCount = votes?.reduce((sum, vote) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
+        const totalVoteCount = votes?.reduce((sum: number, vote: any) => sum + Math.floor((vote.amount || 0) / 100), 0) || 0
 
         return {
           ...campaign,

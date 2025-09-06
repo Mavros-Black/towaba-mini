@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-auth'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Payouts GET endpoint called')
     
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No valid authorization header')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const token = authHeader.split(' ')[1]
+    console.log('Token extracted:', token ? 'Present' : 'Missing')
     
     // Verify the user
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) {
+      console.log('Auth error:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('User authenticated:', user.id)
 
     // Get payout requests for the organizer
     const { data: payouts, error: payoutsError } = await supabase
@@ -30,6 +36,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch payouts' }, { status: 500 })
     }
 
+    console.log('Payouts fetched successfully:', payouts?.length || 0)
+
     return NextResponse.json({
       payoutRequests: payouts || []
     })
@@ -42,28 +50,40 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Payouts POST endpoint called')
     
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No valid authorization header')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const token = authHeader.split(' ')[1]
+    console.log('Token extracted:', token ? 'Present' : 'Missing')
     
     // Verify the user
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) {
+      console.log('Auth error:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('User authenticated:', user.id)
 
     const body = await request.json()
     const { amount, request_type, bank_details } = body
 
+    console.log('Payout request body:', body)
+    console.log('User ID:', user.id)
+
     // Validate required fields
     if (!amount || !request_type) {
+      console.log('Validation failed: missing amount or request_type')
       return NextResponse.json({ error: 'Amount and request type are required' }, { status: 400 })
     }
+
+    console.log('Attempting to create payout request...')
 
     // Create payout request
     const { data: payout, error: payoutError } = await supabase
@@ -81,8 +101,19 @@ export async function POST(request: NextRequest) {
 
     if (payoutError) {
       console.error('Error creating payout request:', payoutError)
-      return NextResponse.json({ error: 'Failed to create payout request' }, { status: 500 })
+      console.error('Payout error details:', {
+        code: payoutError.code,
+        message: payoutError.message,
+        details: payoutError.details,
+        hint: payoutError.hint
+      })
+      return NextResponse.json({ 
+        error: 'Failed to create payout request',
+        details: payoutError.message 
+      }, { status: 500 })
     }
+
+    console.log('Payout request created successfully:', payout)
 
     return NextResponse.json({
       payoutRequest: payout
