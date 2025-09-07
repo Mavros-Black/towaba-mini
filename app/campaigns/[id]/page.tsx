@@ -7,7 +7,8 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Users, Award, Loader2, ArrowLeft, TrendingUp } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
+import { Calendar, Users, Award, ArrowLeft, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { VotingModal } from '@/components/voting-modal'
 import { supabase } from '@/lib/supabase'
@@ -212,10 +213,7 @@ export default function CampaignPage() {
         <Navigation />
         <div className="container mx-auto py-8">
           <div className="flex items-center justify-center py-20">
-            <div className="flex items-center space-x-2">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="text-lg">Loading campaign...</span>
-            </div>
+            <Spinner size="lg" text="Loading campaign..." />
           </div>
         </div>
         <Footer />

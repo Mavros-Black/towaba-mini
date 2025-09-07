@@ -5,7 +5,8 @@ import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
@@ -152,8 +153,8 @@ export default function LoginPage() {
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Signing In...
+                        <Spinner size="sm" />
+                        <span className="ml-2">Signing In...</span>
                       </>
                     ) : (
                       'Sign In'
