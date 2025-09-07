@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { DotsSpinner } from '@/components/ui/spinner'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -23,10 +23,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="text-lg">Loading...</span>
-        </div>
+        <DotsSpinner size="lg" text="Loading..." />
       </div>
     )
   }

@@ -7,7 +7,7 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Spinner } from '@/components/ui/spinner'
+import { DotsSpinner } from '@/components/ui/spinner'
 import { Calendar, Users, Award, ArrowLeft, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { VotingModal } from '@/components/voting-modal'
@@ -73,6 +73,10 @@ export default function CampaignPage() {
   const fetchCampaign = async () => {
     try {
       setLoading(true)
+      
+      // Add a small delay to see the spinner in action
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       const response = await fetch(`/api/campaigns/${campaignId}`)
       if (!response.ok) {
         throw new Error('Failed to fetch campaign')
@@ -211,10 +215,8 @@ export default function CampaignPage() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto py-8">
-          <div className="flex items-center justify-center py-20">
-            <Spinner size="lg" text="Loading campaign..." />
-          </div>
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <DotsSpinner size="lg" text="Loading campaign..." />
         </div>
         <Footer />
       </div>

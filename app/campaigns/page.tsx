@@ -5,7 +5,8 @@ import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Calendar, Users, Plus, Loader2 } from 'lucide-react'
+import { Calendar, Users, Plus } from 'lucide-react'
+import { DotsSpinner } from '@/components/ui/spinner'
 import Link from 'next/link'
 
 interface Campaign {
@@ -83,6 +84,10 @@ export default function CampaignsPage() {
   const fetchCampaigns = async () => {
     try {
       setLoading(true)
+      
+      // Add a small delay to see the spinner in action
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       const response = await fetch('/api/campaigns/public')
       if (!response.ok) {
         throw new Error('Failed to fetch campaigns')
@@ -100,13 +105,8 @@ export default function CampaignsPage() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto py-8">
-          <div className="flex items-center justify-center py-20">
-            <div className="flex items-center space-x-2">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="text-lg">Loading campaigns...</span>
-            </div>
-          </div>
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <DotsSpinner size="lg" text="Loading campaigns..." />
         </div>
       </div>
     )
