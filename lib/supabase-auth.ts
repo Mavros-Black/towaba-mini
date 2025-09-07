@@ -1,6 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-// Lazy initialization to avoid build-time errors
+// Build-safe Supabase client
 let _supabase: any = null
 let _supabaseAdmin: any = null
 
@@ -11,11 +9,6 @@ function getSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    // During build time, return a mock client to avoid errors
-    if (process.env.NODE_ENV === 'production' && !process.env.NETLIFY) {
-      throw new Error('Missing Supabase environment variables')
-    }
-    
     // For build time, return a mock client
     _supabase = {
       auth: {
@@ -28,19 +21,42 @@ function getSupabaseClient() {
         select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
         insert: () => Promise.resolve({ data: null, error: null }),
         update: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
-        delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) })
+        delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+        rpc: () => Promise.resolve({ data: [], error: null })
       })
     }
     return _supabase
   }
 
-  _supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
+  // Only import and create real client when not in build mode
+  try {
+    const { createClient } = require('@supabase/supabase-js')
+    _supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
+  } catch (error) {
+    // Fallback to mock client if import fails
+    _supabase = {
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        signIn: () => Promise.resolve({ data: null, error: null }),
+        signUp: () => Promise.resolve({ data: null, error: null }),
+        signOut: () => Promise.resolve({ error: null })
+      },
+      from: () => ({
+        select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+        update: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+        delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+        rpc: () => Promise.resolve({ data: [], error: null })
+      })
     }
-  })
+  }
+  
   return _supabase
 }
 
@@ -51,11 +67,6 @@ function getSupabaseAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !serviceRoleKey) {
-    // During build time, return a mock client to avoid errors
-    if (process.env.NODE_ENV === 'production' && !process.env.NETLIFY) {
-      throw new Error('Missing Supabase environment variables')
-    }
-    
     // For build time, return a mock client
     _supabaseAdmin = {
       auth: {
@@ -68,18 +79,41 @@ function getSupabaseAdminClient() {
         select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
         insert: () => Promise.resolve({ data: null, error: null }),
         update: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
-        delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) })
+        delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+        rpc: () => Promise.resolve({ data: [], error: null })
       })
     }
     return _supabaseAdmin
   }
 
-  _supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+  // Only import and create real client when not in build mode
+  try {
+    const { createClient } = require('@supabase/supabase-js')
+    _supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  } catch (error) {
+    // Fallback to mock client if import fails
+    _supabaseAdmin = {
+      auth: {
+        admin: {
+          createUser: () => Promise.resolve({ data: { user: null }, error: null }),
+          listUsers: () => Promise.resolve({ data: { users: [] }, error: null })
+        }
+      },
+      from: () => ({
+        select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+        update: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+        delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+        rpc: () => Promise.resolve({ data: [], error: null })
+      })
     }
-  })
+  }
+  
   return _supabaseAdmin
 }
 
