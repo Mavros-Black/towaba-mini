@@ -6,4 +6,5 @@ module.exports = {
     'prefer-const': 'error',
     'no-var': 'error',
   },
+  ignorePatterns: ['node_modules/', '.next/', 'out/'],
 }

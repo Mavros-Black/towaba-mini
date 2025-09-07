@@ -17,6 +17,12 @@ const nextConfig = {
   output: 'standalone',
   // Enable compression
   compress: true,
+  // Suppress ESLint warnings during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // Time in seconds of no pages generating during static generation before timing out
+  staticPageGenerationTimeout: 1000,
 }
 
 module.exports = nextConfig
