@@ -61,12 +61,12 @@ export default function ForgotPasswordPage() {
               >
                 Try Different Email
               </Button>
-              <Button asChild variant="ghost" className="w-full">
-                <Link href="/login">
+              <Link href="/login" className="w-full">
+                <Button variant="ghost" className="w-full">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Login
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -108,12 +108,12 @@ export default function ForgotPasswordPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Button asChild variant="ghost" className="w-full">
-              <Link href="/login">
+            <Link href="/login" className="w-full">
+              <Button variant="ghost" className="w-full">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Login
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
