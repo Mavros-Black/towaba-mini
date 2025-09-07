@@ -280,7 +280,6 @@ export async function GET(request: NextRequest) {
       .eq('organizer_id', user.id)
       .order('created_at', { ascending: false })
 
-    console.log('Fetched campaigns:', campaigns?.map(c => ({ id: c.id, title: c.title, status: c.status })))
 
     if (error) {
       console.error('Error fetching campaigns:', error)

@@ -53,7 +53,6 @@ export default function OrganizerCampaignsPage() {
         throw new Error('Failed to fetch campaigns')
       }
       const data = await response.json()
-      console.log('Campaigns data received:', data.campaigns?.map((c: any) => ({ id: c.id, title: c.title, status: c.status })))
       setCampaigns(data.campaigns || [])
     } catch (error) {
       console.error('Error fetching campaigns:', error)
@@ -99,6 +98,11 @@ export default function OrganizerCampaignsPage() {
     }
 
     try {
+      // Show loading toast
+      const loadingToast = toast.loading('Publishing campaign...', {
+        description: 'Please wait while we publish your campaign'
+      })
+
       const response = await fetch(`/api/organizer/campaigns/${campaignId}/publish`, {
         method: 'POST',
         headers: {
@@ -109,14 +113,28 @@ export default function OrganizerCampaignsPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to publish campaign')
+        // Dismiss loading toast and show error
+        toast.dismiss(loadingToast)
+        toast.error(`❌ ${errorData.error || 'Failed to Publish Campaign'}`, {
+          description: errorData.details || 'Something went wrong. Please try again.',
+          duration: 6000
+        })
+        return
       }
 
-      toast.success('Campaign published successfully!')
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast)
+      toast.success('🎉 Campaign Published Successfully!', {
+        description: 'Your campaign is now live and ready to receive votes',
+        duration: 5000
+      })
       fetchCampaigns() // Refresh the list
     } catch (error) {
       console.error('Error publishing campaign:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to publish campaign')
+      toast.error('❌ Network Error', {
+        description: 'Unable to connect. Please check your internet connection and try again.',
+        duration: 5000
+      })
     }
   }
 
@@ -167,9 +185,7 @@ export default function OrganizerCampaignsPage() {
           </Card>
         ) : (
           <div className="grid gap-6">
-            {campaigns.map((campaign) => {
-              console.log('Rendering campaign:', { id: campaign.id, title: campaign.title, status: campaign.status, shouldShowPublish: (campaign.status === 'DRAFT' || !campaign.status || campaign.status === null) })
-              return (
+            {campaigns.map((campaign) => (
               <Card key={campaign.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -210,10 +226,6 @@ export default function OrganizerCampaignsPage() {
                             <Badge variant="outline">
                               {campaign._count.nominees} Nominees
                             </Badge>
-                            {/* Debug info */}
-                            <Badge variant="outline" className="bg-red-100 text-red-800">
-                              Status: {campaign.status || 'NULL'}
-                            </Badge>
                           </div>
                           
                           {campaign.description && (
@@ -233,25 +245,15 @@ export default function OrganizerCampaignsPage() {
                     </div>
                     
                                          <div className="flex items-center space-x-2 ml-4">
-                       {/* Debug: Always show publish button for testing */}
-                       <Button 
-                         variant="default" 
-                         size="sm"
-                         onClick={() => handlePublishCampaign(campaign.id)}
-                         className="bg-green-600 hover:bg-green-700"
-                       >
-                         <Globe className="w-4 h-4 mr-1" />
-                         Publish (Debug)
-                       </Button>
                        {(campaign.status === 'DRAFT' || !campaign.status || campaign.status === null) && (
                          <Button 
                            variant="default" 
                            size="sm"
                            onClick={() => handlePublishCampaign(campaign.id)}
-                           className="bg-blue-600 hover:bg-blue-700"
+                           className="bg-green-600 hover:bg-green-700"
                          >
                            <Globe className="w-4 h-4 mr-1" />
-                           Publish (Conditional)
+                           Publish
                          </Button>
                        )}
                        <Button 
@@ -279,8 +281,7 @@ export default function OrganizerCampaignsPage() {
                   </div>
                 </CardContent>
               </Card>
-              )
-            })}
+            ))}
           </div>
         )}
       </div>

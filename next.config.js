@@ -9,7 +9,7 @@ const nextConfig = {
   },
   // Basic image configuration
   images: {
-    domains: ['localhost', 'supabase.co'],
+    domains: ['localhost', 'supabase.co', 'ckzlhntdecsdywiormow.supabase.co'],
   },
   // External packages
   serverExternalPackages: ['@prisma/client'],

@@ -45,13 +45,17 @@ export async function POST(
 
     // Check if campaign is already published
     if (campaign.status === 'ACTIVE') {
-      return NextResponse.json({ error: 'Campaign is already published' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'This campaign is already published and live!',
+        details: 'You cannot publish a campaign that is already active.'
+      }, { status: 400 })
     }
 
     // Validate campaign has required data for publishing
     if (!campaign.title || !campaign.description) {
       return NextResponse.json({ 
-        error: 'Campaign must have a title and description before publishing' 
+        error: 'Incomplete campaign information',
+        details: 'Please add a title and description to your campaign before publishing.'
       }, { status: 400 })
     }
 
@@ -75,7 +79,8 @@ export async function POST(
 
     if (!categories || categories.length === 0) {
       return NextResponse.json({ 
-        error: 'Campaign must have at least one category before publishing' 
+        error: 'No categories found',
+        details: 'Please add at least one category to your campaign before publishing.'
       }, { status: 400 })
     }
 
@@ -83,7 +88,8 @@ export async function POST(
     for (const category of categories) {
       if (!category.nominees || category.nominees.length === 0) {
         return NextResponse.json({ 
-          error: `Category "${category.name}" must have at least one nominee before publishing` 
+          error: 'Missing nominees in category',
+          details: `The "${category.name}" category needs at least one nominee before publishing.`
         }, { status: 400 })
       }
     }
@@ -92,8 +98,7 @@ export async function POST(
     const { data: updatedCampaign, error: updateError } = await supabase
       .from('campaigns')
       .update({ 
-        status: 'ACTIVE',
-        published_at: new Date().toISOString()
+        status: 'ACTIVE'
       })
       .eq('id', id)
       .eq('organizer_id', user.id)
@@ -102,7 +107,10 @@ export async function POST(
 
     if (updateError) {
       console.log('Error updating campaign:', updateError)
-      return NextResponse.json({ error: 'Failed to publish campaign' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Database error',
+        details: 'Unable to update campaign status. Please try again or contact support.'
+      }, { status: 500 })
     }
 
     console.log('Campaign published successfully:', updatedCampaign.title)
