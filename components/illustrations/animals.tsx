@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 // Elephant Illustration - Friendly and approachable
 export const ElephantIllustration = ({ className = "w-full h-full" }: { className?: string }) => (
@@ -212,9 +212,13 @@ export const BirdIllustration = ({ className = "w-full h-full" }: { className?: 
 
 // Main illustration component that randomly selects an animal
 export const AnimalIllustration = ({ className = "w-full h-full" }: { className?: string }) => {
-  const animals = [ElephantIllustration, LionIllustration, GiraffeIllustration, MonkeyIllustration, BirdIllustration]
-  const randomAnimal = animals[Math.floor(Math.random() * animals.length)]
-  const AnimalComponent = randomAnimal
+  const [AnimalComponent, setAnimalComponent] = useState(() => ElephantIllustration)
+  
+  useEffect(() => {
+    const animals = [ElephantIllustration, LionIllustration, GiraffeIllustration, MonkeyIllustration, BirdIllustration]
+    const randomAnimal = animals[Math.floor(Math.random() * animals.length)]
+    setAnimalComponent(() => randomAnimal)
+  }, [])
   
   return <AnimalComponent className={className} />
 }

@@ -27,11 +27,11 @@ export default function AboutPage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-              About VoteApp
+              About Towaba
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Empowering communities to participate in democratic decision-making through secure, 
-              transparent, and accessible voting platforms.
+              Empowering event organizers and communities across Ghana with secure, transparent, 
+              and accessible voting platforms for campaigns, contests, and democratic participation.
             </p>
           </motion.div>
         </div>
@@ -51,12 +51,12 @@ export default function AboutPage() {
                 Our Mission
               </h2>
               <p className="text-lg text-muted-foreground mb-6">
-                We believe that every voice matters and every vote counts. Our platform is designed 
-                to make voting accessible, secure, and engaging for everyone.
+                We believe that every voice matters and every vote counts. Towaba is designed 
+                to make event voting accessible, secure, and engaging for organizers and participants across Ghana.
               </p>
               <p className="text-lg text-muted-foreground">
-                Whether you're organizing a local event, running a corporate election, or managing 
-                a community poll, VoteApp provides the tools you need to succeed.
+                Whether you're organizing beauty pageants, talent shows, community elections, or corporate events, 
+                Towaba provides the tools you need to create successful voting campaigns with integrated payment systems.
               </p>
             </motion.div>
             
@@ -109,22 +109,22 @@ export default function AboutPage() {
               {
                 icon: Shield,
                 title: 'Security',
-                description: 'Your data and votes are protected with enterprise-grade security.',
+                description: 'Your campaigns and votes are protected with enterprise-grade encryption and fraud detection.',
               },
               {
                 icon: Globe,
                 title: 'Accessibility',
-                description: 'Voting from anywhere, on any device, at any time.',
+                description: 'Vote from anywhere in Ghana using mobile money, cards, or USSD codes.',
               },
               {
                 icon: Zap,
                 title: 'Innovation',
-                description: 'Cutting-edge technology for modern voting experiences.',
+                description: 'Real-time vote counting, analytics, and integrated payment processing.',
               },
               {
                 icon: Users,
                 title: 'Community',
-                description: 'Building stronger communities through democratic participation.',
+                description: 'Empowering Ghanaian communities through fair and transparent voting campaigns.',
               },
             ].map((value, index) => (
               <motion.div
@@ -170,10 +170,10 @@ export default function AboutPage() {
             </p>
             <div className="space-y-4">
               <p className="text-muted-foreground">
-                Email: support@voteapp.com
+                Email: support@towaba.com
               </p>
               <p className="text-muted-foreground">
-                Phone: +233 20 000 0000
+                Phone: +233 24 123 4567
               </p>
               <p className="text-muted-foreground">
                 Address: Accra, Ghana

@@ -37,13 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
+        console.log('Auth state change:', event, session?.user?.id)
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
         
         // Redirect to login page when user signs out
         if (event === 'SIGNED_OUT' && !session) {
-          router.push('/login')
+          console.log('User signed out, redirecting to login')
+          if (typeof window !== 'undefined') {
+            router.push('/login')
+          }
         }
       }
     )
@@ -74,9 +78,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    // Redirect to login page after sign out
-    router.push('/login')
+    try {
+      console.log('Signing out user...')
+      await supabase.auth.signOut()
+      console.log('User signed out, redirecting to login page')
+      // Redirect to login page after sign out
+      if (typeof window !== 'undefined') {
+        router.push('/login')
+      }
+    } catch (error) {
+      console.error('Sign out error:', error)
+      // Still redirect even if there's an error
+      if (typeof window !== 'undefined') {
+        router.push('/login')
+      }
+    }
   }
 
   const resetPassword = async (email: string) => {
