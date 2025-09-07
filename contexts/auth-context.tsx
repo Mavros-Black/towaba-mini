@@ -46,7 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_OUT' && !session) {
           console.log('User signed out, redirecting to login')
           if (typeof window !== 'undefined') {
-            router.push('/login')
+            // Use window.location to force a hard redirect and prevent Supabase redirect
+            window.location.href = '/login'
           }
         }
       }
@@ -80,17 +81,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       console.log('Signing out user...')
+      // Clear local state first
+      setUser(null)
+      setSession(null)
+      
+      // Sign out from Supabase
       await supabase.auth.signOut()
       console.log('User signed out, redirecting to login page')
-      // Redirect to login page after sign out
+      
+      // Force redirect to our login page
       if (typeof window !== 'undefined') {
-        router.push('/login')
+        // Use window.location to force a hard redirect and prevent Supabase redirect
+        window.location.href = '/login'
       }
     } catch (error) {
       console.error('Sign out error:', error)
+      // Clear local state even if sign out fails
+      setUser(null)
+      setSession(null)
       // Still redirect even if there's an error
       if (typeof window !== 'undefined') {
-        router.push('/login')
+        window.location.href = '/login'
       }
     }
   }

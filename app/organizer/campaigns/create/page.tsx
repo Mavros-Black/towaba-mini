@@ -267,8 +267,15 @@ export default function CreateCampaignPage() {
     updateFormData('directNominees', updatedNominees)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
+    console.log('Create campaign clicked, current step:', currentStep)
+    console.log('Form data:', formData)
+    
+    // Only allow submission on the final step
+    if (currentStep < STEPS.length) {
+      console.log('Campaign creation blocked - not on final step')
+      return
+    }
     
     if (!session?.access_token) {
       toast.error('Authentication required. Please log in again.')
@@ -276,9 +283,11 @@ export default function CreateCampaignPage() {
     }
     
     if (!validateCurrentStep()) {
+      console.log('Validation failed for step:', currentStep)
       return
     }
 
+    console.log('Starting campaign creation...')
     setLoading(true)
 
     try {
@@ -1037,7 +1046,7 @@ export default function CreateCampaignPage() {
 
             <CardContent className="pt-0">
               {/* Compact Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4">
                 <div className="border rounded-lg p-4 bg-muted/30">
                   <div className="flex items-center space-x-2 mb-3">
                     {React.createElement(STEPS[currentStep - 1].icon, { className: "w-5 h-5" })}
@@ -1073,7 +1082,8 @@ export default function CreateCampaignPage() {
                       </Button>
                     ) : (
                       <Button
-                        type="submit"
+                        type="button"
+                        onClick={handleSubmit}
                         disabled={loading}
                         className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
                         size="sm"
@@ -1093,7 +1103,7 @@ export default function CreateCampaignPage() {
                     )}
                   </div>
                 </div>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </div>

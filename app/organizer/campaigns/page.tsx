@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Calendar, Users, Award, Loader2, Edit, Trash2, Eye } from 'lucide-react'
+import { Plus, Calendar, Users, Award, Loader2, Edit, Trash2, Eye, Globe, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { DashboardWrapper } from '@/components/dashboard-wrapper'
+import Image from 'next/image'
 
 interface Campaign {
   id: string
@@ -17,6 +18,7 @@ interface Campaign {
   description: string | null
   cover_image: string | null
   created_at: string
+  status: string
   _count: {
     categories: number
     nominees: number
@@ -51,6 +53,7 @@ export default function OrganizerCampaignsPage() {
         throw new Error('Failed to fetch campaigns')
       }
       const data = await response.json()
+      console.log('Campaigns data received:', data.campaigns?.map((c: any) => ({ id: c.id, title: c.title, status: c.status })))
       setCampaigns(data.campaigns || [])
     } catch (error) {
       console.error('Error fetching campaigns:', error)
@@ -87,6 +90,33 @@ export default function OrganizerCampaignsPage() {
     } catch (error) {
       console.error('Error deleting campaign:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to delete campaign')
+    }
+  }
+
+  const handlePublishCampaign = async (campaignId: string) => {
+    if (!confirm('Are you sure you want to publish this campaign? Once published, it will be visible to the public and voting will begin.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/organizer/campaigns/${campaignId}/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to publish campaign')
+      }
+
+      toast.success('Campaign published successfully!')
+      fetchCampaigns() // Refresh the list
+    } catch (error) {
+      console.error('Error publishing campaign:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to publish campaign')
     }
   }
 
@@ -137,38 +167,93 @@ export default function OrganizerCampaignsPage() {
           </Card>
         ) : (
           <div className="grid gap-6">
-            {campaigns.map((campaign) => (
+            {campaigns.map((campaign) => {
+              console.log('Rendering campaign:', { id: campaign.id, title: campaign.title, status: campaign.status, shouldShowPublish: (campaign.status === 'DRAFT' || !campaign.status || campaign.status === null) })
+              return (
               <Card key={campaign.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <h3 className="text-xl font-semibold text-foreground">
-                          {campaign.title}
-                        </h3>
-                        <Badge variant="secondary">
-                          {campaign._count.categories} Categories
-                        </Badge>
-                        <Badge variant="outline">
-                          {campaign._count.nominees} Nominees
-                        </Badge>
-                      </div>
-                      
-                      {campaign.description && (
-                        <p className="text-muted-foreground mb-4 line-clamp-2">
-                          {campaign.description}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>Created {new Date(campaign.created_at).toLocaleDateString()}</span>
+                      <div className="flex items-start space-x-4">
+                        {/* Cover Image */}
+                        <div className="flex-shrink-0">
+                          {campaign.cover_image ? (
+                            <div className="relative w-20 h-20 rounded-lg overflow-hidden">
+                              <Image
+                                src={campaign.cover_image}
+                                alt={campaign.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
+                              <Award className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <h3 className="text-xl font-semibold text-foreground">
+                              {campaign.title}
+                            </h3>
+                            <Badge 
+                              variant={campaign.status === 'ACTIVE' ? 'default' : 'secondary'}
+                              className={campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+                            >
+                              {campaign.status === 'ACTIVE' ? 'Published' : 'Draft'}
+                            </Badge>
+                            <Badge variant="secondary">
+                              {campaign._count.categories} Categories
+                            </Badge>
+                            <Badge variant="outline">
+                              {campaign._count.nominees} Nominees
+                            </Badge>
+                            {/* Debug info */}
+                            <Badge variant="outline" className="bg-red-100 text-red-800">
+                              Status: {campaign.status || 'NULL'}
+                            </Badge>
+                          </div>
+                          
+                          {campaign.description && (
+                            <p className="text-muted-foreground mb-4 line-clamp-2">
+                              {campaign.description}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="w-4 h-4" />
+                              <span>Created {new Date(campaign.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
                                          <div className="flex items-center space-x-2 ml-4">
+                       {/* Debug: Always show publish button for testing */}
+                       <Button 
+                         variant="default" 
+                         size="sm"
+                         onClick={() => handlePublishCampaign(campaign.id)}
+                         className="bg-green-600 hover:bg-green-700"
+                       >
+                         <Globe className="w-4 h-4 mr-1" />
+                         Publish (Debug)
+                       </Button>
+                       {(campaign.status === 'DRAFT' || !campaign.status || campaign.status === null) && (
+                         <Button 
+                           variant="default" 
+                           size="sm"
+                           onClick={() => handlePublishCampaign(campaign.id)}
+                           className="bg-blue-600 hover:bg-blue-700"
+                         >
+                           <Globe className="w-4 h-4 mr-1" />
+                           Publish (Conditional)
+                         </Button>
+                       )}
                        <Button 
                          variant="outline" 
                          size="sm"
@@ -194,7 +279,8 @@ export default function OrganizerCampaignsPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
