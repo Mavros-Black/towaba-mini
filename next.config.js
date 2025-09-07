@@ -15,10 +15,6 @@ const nextConfig = {
   serverExternalPackages: ['@prisma/client'],
   // Build timeout
   staticPageGenerationTimeout: 1000,
-  // Disable page data collection for API routes
-  experimental: {
-    skipTrailingSlashRedirect: true,
-  },
 }
 
 module.exports = nextConfig
