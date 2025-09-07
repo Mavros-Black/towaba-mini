@@ -8,8 +8,13 @@ import { Toaster } from 'sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Event Voting App',
+  title: 'Towaba - Event Voting Platform',
   description: 'A modern platform for managing and voting in events and campaigns',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
