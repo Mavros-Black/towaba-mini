@@ -22,11 +22,15 @@ export class PaystackService {
   private baseUrl: string
 
   constructor() {
-    this.secretKey = process.env.PAYSTACK_SECRET_KEY!
+    this.secretKey = process.env.PAYSTACK_SECRET_KEY || ''
     this.baseUrl = 'https://api.paystack.co'
   }
 
   async initializePayment(params: InitializePaymentParams): Promise<PaymentResponse> {
+    if (!this.secretKey) {
+      throw new Error('Paystack secret key not configured')
+    }
+    
     try {
       const response = await axios.post(
         `${this.baseUrl}/transaction/initialize`,
@@ -52,6 +56,10 @@ export class PaystackService {
   }
 
   async verifyPayment(reference: string) {
+    if (!this.secretKey) {
+      throw new Error('Paystack secret key not configured')
+    }
+    
     try {
       const response = await axios.get(
         `${this.baseUrl}/transaction/verify/${reference}`,
@@ -70,6 +78,11 @@ export class PaystackService {
   }
 
   verifyWebhookSignature(payload: string, signature: string): boolean {
+    if (!this.secretKey) {
+      console.error('Paystack secret key not configured for webhook verification')
+      return false
+    }
+    
     const crypto = require('crypto')
     const hash = crypto
       .createHmac('sha512', this.secretKey)
