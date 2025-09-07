@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { Navigation } from '@/components/navigation'
+import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -217,6 +218,7 @@ export default function CampaignPage() {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
@@ -237,6 +239,7 @@ export default function CampaignPage() {
             </Link>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
@@ -404,6 +407,8 @@ export default function CampaignPage() {
           campaign={campaign}
         />
       )}
+
+      <Footer />
     </div>
   )
 }
