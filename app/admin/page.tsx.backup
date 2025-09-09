@@ -1,0 +1,970 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { 
+  Users, 
+  Megaphone, 
+  DollarSign, 
+  TrendingUp, 
+  Activity, 
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  BarChart3,
+  RefreshCw,
+  PieChart as PieChartIcon
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase-auth'
+import AdminLayout from '@/components/admin-layout'
+import AdminProtectedRoute from '@/components/admin-protected-route'
+import { 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Label
+} from 'recharts'
+import Highcharts3DPie from '@/components/highcharts-3d-pie'
+
+interface DashboardStats {
+  totalUsers: number
+  totalCampaigns: number
+  totalRevenue: number
+  activeCampaigns: number
+  pendingCampaigns: number
+  totalVotes: number
+  paymentSuccessRate: number
+  recentActivity: Array<{
+    id: string
+    type: 'campaign_created' | 'payment_success' | 'user_registered' | 'campaign_published'
+    message: string
+    timestamp: string
+    status: 'success' | 'warning' | 'info'
+  }>
+  revenueChart: Array<{
+    date: string
+    revenue: number
+    votes?: number
+  }>
+  campaignPerformance: Array<{
+    name: string
+    votes: number
+    revenue: number
+    fullName: string
+  }>
+  paymentMethodChart: Array<{
+    name: string
+    value: number
+    percentage: number
+  }>
+  votesTable: Array<{
+    id: string
+    amount: number
+    status: string
+    createdAt: string
+    voterName: string
+    campaignTitle: string
+    nomineeName: string
+  }>
+}
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const fetchDashboardStats = async () => {
+    try {
+      setRefreshing(true)
+      
+      // Get the current session token
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('No authentication token found')
+      }
+
+      const response = await fetch('/api/admin/dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats')
+      }
+      const data = await response.json()
+      setStats(data)
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error)
+      toast.error('Failed to load dashboard data')
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDashboardStats()
+  }, [])
+
+  const handleRefresh = () => {
+    fetchDashboardStats()
+    toast.success('Dashboard refreshed')
+  }
+
+  if (loading) {
+    return (
+      <AdminProtectedRoute>
+        <AdminLayout>
+          <div className="flex items-center justify-center h-64">
+            <div className="flex items-center space-x-2">
+              <RefreshCw className="h-6 w-6 animate-spin" />
+              <span>Loading dashboard...</span>
+            </div>
+          </div>
+        </AdminLayout>
+      </AdminProtectedRoute>
+    )
+  }
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'campaign_created':
+        return <Megaphone className="h-4 w-4" />
+      case 'payment_success':
+        return <DollarSign className="h-4 w-4" />
+      case 'user_registered':
+        return <Users className="h-4 w-4" />
+      case 'campaign_published':
+        return <CheckCircle className="h-4 w-4" />
+      default:
+        return <Activity className="h-4 w-4" />
+    }
+  }
+
+  const getActivityColor = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'text-green-600'
+      case 'warning':
+        return 'text-yellow-600'
+      case 'info':
+        return 'text-blue-600'
+      default:
+        return 'text-gray-600'
+    }
+  }
+
+  return (
+    <AdminProtectedRoute>
+      <AdminLayout>
+        <div className="max-w-7xl mx-auto space-y-6 px-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Platform overview and key performance indicators
+            </p>
+          </div>
+          <Button 
+            onClick={handleRefresh} 
+            disabled={refreshing}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+
+        {/* Key Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.totalUsers?.toLocaleString() || '0'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Registered organizers
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
+              <Megaphone className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.totalCampaigns?.toLocaleString() || '0'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {stats?.activeCampaigns || 0} active, {stats?.pendingCampaigns || 0} pending
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                ₵{(stats?.totalRevenue || 0).toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Platform commission
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Votes</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.totalVotes?.toLocaleString() || '0'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Across all campaigns
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        
+
+        {/* Revenue Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Revenue Trend Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <TrendingUp className="h-5 w-5 mr-2" />
+                Revenue Trend
+              </CardTitle>
+              <CardDescription>
+                Daily platform revenue from successful payments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={stats?.revenueChart || []}>
+                    <defs>
+                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }}
+                      formatter={(value: any) => [`₵${value}`, 'Revenue']}
+                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#3b82f6" 
+                      fillOpacity={1} 
+                      fill="url(#revenueGradient)" 
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Campaign Performance Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Campaign Performance
+              </CardTitle>
+              <CardDescription>
+                Top performing campaigns by revenue
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-96 w-full">
+                <Highcharts3DPie />
+              </div>
+            </CardContent>
+          </Card>
+
+        {/* Performance Metrics */}
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.02); }
+                  }
+                  
+                  @keyframes slowRotate {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                  }
+                  
+                  @keyframes glow {
+                    0%, 100% { filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.3)); }
+                    50% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.6)); }
+                  }
+                  
+                  .dynamic-pie-chart {
+                    animation: pulse 4s ease-in-out infinite, slowRotate 20s linear infinite;
+                    transform-style: preserve-3d;
+                    perspective: 1000px;
+                  }
+                  
+                  .dynamic-pie-chart:hover {
+                    animation: glow 2s ease-in-out infinite, perspective3D 3s ease-in-out infinite;
+                  }
+                  
+                  @keyframes perspective3D {
+                    0%, 100% { 
+                      transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+                    }
+                    25% { 
+                      transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+                    }
+                    50% { 
+                      transform: perspective(1000px) rotateX(0deg) rotateY(10deg);
+                    }
+                    75% { 
+                      transform: perspective(1000px) rotateX(-5deg) rotateY(5deg);
+                    }
+                  }
+                  
+                  .pie-slice {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    transform-origin: center;
+                  }
+                  
+                  .pie-slice:hover {
+                    transform: scale(1.1) translateZ(10px);
+                    filter: brightness(1.2) saturate(1.3);
+                    z-index: 10;
+                  }
+                  
+                  @keyframes lineGlow {
+                    0%, 100% { stroke-opacity: 0.7; }
+                    50% { stroke-opacity: 1; }
+                  }
+                  
+                  .label-line {
+                    animation: lineGlow 3s ease-in-out infinite;
+                  }
+                  
+                  .label-line:hover {
+                    stroke-width: 3;
+                    stroke-opacity: 1;
+                    animation: none;
+                  }
+                `}</style>
+                {(() => {
+                  console.log('Frontend campaign performance data:', stats?.campaignPerformance)
+                  console.log('Data length:', stats?.campaignPerformance?.length)
+                  
+                  const chartData = stats?.campaignPerformance && stats.campaignPerformance.length > 0 
+                    ? stats.campaignPerformance 
+                    : []
+                  
+                  console.log('Using chart data:', chartData)
+                  console.log('Chart data sample:', chartData[0])
+                  
+                  if (chartData.length === 0) {
+                    return (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center">
+                          <BarChart3 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-muted-foreground">No campaign data available</p>
+                        </div>
+                      </div>
+                    )
+                  }
+                  
+                  return (
+                    <ResponsiveContainer width="100%" height="100%" className="dynamic-pie-chart">
+                      <RechartsPieChart>
+                        <defs>
+                          {/* True 3D Perspective Gradients */}
+                          <radialGradient id="pieGradient1" cx="25%" cy="25%" r="75%">
+                            <stop offset="0%" stopColor="#60a5fa" stopOpacity={1}/>
+                            <stop offset="20%" stopColor="#3b82f6" stopOpacity={0.95}/>
+                            <stop offset="40%" stopColor="#2563eb" stopOpacity={0.9}/>
+                            <stop offset="70%" stopColor="#1d4ed8" stopOpacity={0.8}/>
+                            <stop offset="100%" stopColor="#1e40af" stopOpacity={0.6}/>
+                          </radialGradient>
+                          <radialGradient id="pieGradient2" cx="25%" cy="25%" r="75%">
+                            <stop offset="0%" stopColor="#a78bfa" stopOpacity={1}/>
+                            <stop offset="20%" stopColor="#8b5cf6" stopOpacity={0.95}/>
+                            <stop offset="40%" stopColor="#7c3aed" stopOpacity={0.9}/>
+                            <stop offset="70%" stopColor="#6d28d9" stopOpacity={0.8}/>
+                            <stop offset="100%" stopColor="#5b21b6" stopOpacity={0.6}/>
+                          </radialGradient>
+                          <radialGradient id="pieGradient3" cx="25%" cy="25%" r="75%">
+                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={1}/>
+                            <stop offset="20%" stopColor="#06b6d4" stopOpacity={0.95}/>
+                            <stop offset="40%" stopColor="#0891b2" stopOpacity={0.9}/>
+                            <stop offset="70%" stopColor="#0e7490" stopOpacity={0.8}/>
+                            <stop offset="100%" stopColor="#155e75" stopOpacity={0.6}/>
+                          </radialGradient>
+                          <radialGradient id="pieGradient4" cx="25%" cy="25%" r="75%">
+                            <stop offset="0%" stopColor="#34d399" stopOpacity={1}/>
+                            <stop offset="20%" stopColor="#10b981" stopOpacity={0.95}/>
+                            <stop offset="40%" stopColor="#059669" stopOpacity={0.9}/>
+                            <stop offset="70%" stopColor="#047857" stopOpacity={0.8}/>
+                            <stop offset="100%" stopColor="#065f46" stopOpacity={0.6}/>
+                          </radialGradient>
+                          <radialGradient id="pieGradient5" cx="25%" cy="25%" r="75%">
+                            <stop offset="0%" stopColor="#fbbf24" stopOpacity={1}/>
+                            <stop offset="20%" stopColor="#f59e0b" stopOpacity={0.95}/>
+                            <stop offset="40%" stopColor="#d97706" stopOpacity={0.9}/>
+                            <stop offset="70%" stopColor="#b45309" stopOpacity={0.8}/>
+                            <stop offset="100%" stopColor="#92400e" stopOpacity={0.6}/>
+                          </radialGradient>
+                          
+                          {/* True 3D Perspective Shadow */}
+                          <filter id="pie3DShadow" x="-150%" y="-150%" width="400%" height="400%">
+                            <feDropShadow dx="12" dy="12" stdDeviation="8" floodColor="#000000" floodOpacity="0.5"/>
+                            <feDropShadow dx="6" dy="6" stdDeviation="4" floodColor="#000000" floodOpacity="0.3"/>
+                            <feDropShadow dx="3" dy="3" stdDeviation="2" floodColor="#000000" floodOpacity="0.2"/>
+                          </filter>
+                          
+                          {/* 3D Perspective Lighting */}
+                          <filter id="pie3DGlow" x="-100%" y="-100%" width="300%" height="300%">
+                            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                            <feSpecularLighting in="coloredBlur" specularConstant="3" specularExponent="30" lightingColor="#ffffff" result="specOut">
+                              <fePointLight x="-150" y="-150" z="400"/>
+                            </feSpecularLighting>
+                            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut2"/>
+                            <feMerge> 
+                              <feMergeNode in="coloredBlur"/>
+                              <feMergeNode in="specOut2"/>
+                              <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                          </filter>
+                          
+                          {/* Advanced 3D Depth Lighting */}
+                          <filter id="pie3DLighting" x="-100%" y="-100%" width="300%" height="300%">
+                            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+                            <feSpecularLighting in="blur" specularConstant="2.5" specularExponent="35" lightingColor="#ffffff" result="specOut">
+                              <fePointLight x="-120" y="-120" z="350"/>
+                            </feSpecularLighting>
+                            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut2"/>
+                            <feComposite in="SourceGraphic" in2="specOut2" operator="arithmetic" k1="0" k2="1" k3="1.2" k4="0"/>
+                          </filter>
+                          
+                          {/* 3D Perspective Emboss */}
+                          <filter id="pie3DEmboss" x="-100%" y="-100%" width="300%" height="300%">
+                            <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+                            <feSpecularLighting in="blur" specularConstant="2" specularExponent="20" lightingColor="#ffffff" result="specOut">
+                              <fePointLight x="80" y="80" z="250"/>
+                            </feSpecularLighting>
+                            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut2"/>
+                            <feComposite in="SourceGraphic" in2="specOut2" operator="arithmetic" k1="0" k2="1" k3="1.1" k4="0"/>
+                          </filter>
+                          
+                          {/* 3D Depth Perspective */}
+                          <filter id="pie3DPerspective" x="-100%" y="-100%" width="300%" height="300%">
+                            <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="blur"/>
+                            <feSpecularLighting in="blur" specularConstant="1.8" specularExponent="25" lightingColor="#ffffff" result="specOut">
+                              <fePointLight x="-80" y="-80" z="300"/>
+                            </feSpecularLighting>
+                            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut2"/>
+                            <feComposite in="SourceGraphic" in2="specOut2" operator="arithmetic" k1="0" k2="1" k3="1.3" k4="0"/>
+                          </filter>
+                          
+                          {/* Enhanced Line Gradient */}
+                          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="1"/>
+                            <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.9"/>
+                            <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.9"/>
+                            <stop offset="100%" stopColor="#10b981" stopOpacity="1"/>
+                          </linearGradient>
+                          
+                          {/* Connection Point Gradient */}
+                          <radialGradient id="connectionGradient" cx="30%" cy="30%" r="70%">
+                            <stop offset="0%" stopColor="#ffffff" stopOpacity="1"/>
+                            <stop offset="50%" stopColor="#6b7280" stopOpacity="0.9"/>
+                            <stop offset="100%" stopColor="#374151" stopOpacity="0.8"/>
+                          </radialGradient>
+                          
+                          {/* Label Background Gradient */}
+                          <linearGradient id="labelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(255, 255, 255, 0.98)"/>
+                            <stop offset="50%" stopColor="rgba(248, 250, 252, 0.95)"/>
+                            <stop offset="100%" stopColor="rgba(241, 245, 249, 0.92)"/>
+                          </linearGradient>
+                          
+                          {/* Label Border Gradient */}
+                          <linearGradient id="labelBorderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#e2e8f0"/>
+                            <stop offset="50%" stopColor="#cbd5e1"/>
+                            <stop offset="100%" stopColor="#94a3b8"/>
+                          </linearGradient>
+                        </defs>
+                        
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={({ cx, cy, midAngle, innerRadius, outerRadius }) => {
+                            const RADIAN = Math.PI / 180;
+                            const angle = midAngle || 0;
+                            // Start line from the edge of the slice
+                            const sliceEdgeRadius = outerRadius;
+                            const x = cx + sliceEdgeRadius * Math.cos(-angle * RADIAN);
+                            const y = cy + sliceEdgeRadius * Math.sin(-angle * RADIAN);
+                            
+                            // Smart label positioning to avoid overlap
+                            let labelRadius = outerRadius + 60;
+                            let labelX = cx + labelRadius * Math.cos(-angle * RADIAN);
+                            let labelY = cy + labelRadius * Math.sin(-angle * RADIAN);
+                            
+                            // Use angle to determine label index for spacing
+                            const normalizedAngle = ((angle % 360) + 360) % 360;
+                            const labelIndex = Math.floor(normalizedAngle / (360 / chartData.length));
+                            const totalLabels = chartData.length;
+                            const labelSpacing = 40; // Space between labels
+                            const startY = cy - (totalLabels * labelSpacing) / 2;
+                            
+                            // Adjust positioning for right side to avoid cramping
+                            if (labelX > cx + 20) {
+                              labelX = cx + 180; // Fixed position on right side
+                              labelY = startY + (labelIndex * labelSpacing); // Vertical spacing
+                              labelRadius = Math.sqrt(Math.pow(labelX - cx, 2) + Math.pow(labelY - cy, 2));
+                            } else if (labelX < cx - 20) {
+                              labelX = cx - 180; // Fixed position on left side
+                              labelY = startY + (labelIndex * labelSpacing); // Vertical spacing
+                              labelRadius = Math.sqrt(Math.pow(labelX - cx, 2) + Math.pow(labelY - cy, 2));
+                            }
+                            
+                            return (
+                              <g>
+                                <line
+                                  x1={x}
+                                  y1={y}
+                                  x2={labelX}
+                                  y2={labelY}
+                                  stroke="url(#lineGradient)"
+                                  strokeWidth="4"
+                                  strokeDasharray="10,5"
+                                  opacity="0.9"
+                                  className="label-line"
+                                  style={{
+                                    transition: 'all 0.3s ease-in-out',
+                                    filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.3))'
+                                  }}
+                                />
+                                {/* Arrow-like endpoint pointing to label */}
+                                <polygon
+                                  points={`${labelX-10},${labelY-5} ${labelX},${labelY} ${labelX-10},${labelY+5}`}
+                                  fill="url(#lineGradient)"
+                                  opacity="0.9"
+                                  style={{
+                                    transition: 'all 0.3s ease-in-out',
+                                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+                                  }}
+                                />
+                                {/* Connection point at slice edge */}
+                                <circle
+                                  cx={x}
+                                  cy={y}
+                                  r="6"
+                                  fill="url(#connectionGradient)"
+                                  opacity="0.95"
+                                  style={{
+                                    transition: 'all 0.3s ease-in-out',
+                                    filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.4))'
+                                  }}
+                                />
+                              </g>
+                            );
+                          }}
+                          label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                            const shortName = name.length > 20 ? name.substring(0, 20) + '...' : name;
+                            const RADIAN = Math.PI / 180;
+                            const angle = midAngle || 0;
+                            
+                            // Smart label positioning to avoid overlap
+                            let labelRadius = outerRadius + 60;
+                            let x = cx + labelRadius * Math.cos(-angle * RADIAN);
+                            let y = cy + labelRadius * Math.sin(-angle * RADIAN);
+                            
+                            // Use angle to determine label index for spacing
+                            const normalizedAngle = ((angle % 360) + 360) % 360;
+                            const labelIndex = Math.floor(normalizedAngle / (360 / chartData.length));
+                            const totalLabels = chartData.length;
+                            const labelSpacing = 40; // Space between labels
+                            const startY = cy - (totalLabels * labelSpacing) / 2;
+                            
+                            // Adjust positioning for right side to avoid cramping
+                            if (x > cx + 20) {
+                              x = cx + 180; // Fixed position on right side
+                              y = startY + (labelIndex * labelSpacing); // Vertical spacing
+                            } else if (x < cx - 20) {
+                              x = cx - 180; // Fixed position on left side
+                              y = startY + (labelIndex * labelSpacing); // Vertical spacing
+                            }
+                            
+                            return (
+                              <g>
+                                <rect
+                                  x={x - 70}
+                                  y={y - 18}
+                                  width="140"
+                                  height="36"
+                                  fill="url(#labelGradient)"
+                                  stroke="url(#labelBorderGradient)"
+                                  strokeWidth="2"
+                                  rx="12"
+                                  style={{
+                                    filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
+                                    transition: 'all 0.3s ease-in-out'
+                                  }}
+                                />
+                                <text 
+                                  x={x} 
+                                  y={y} 
+                                  fill="#1f2937" 
+                                  textAnchor="middle" 
+                                  dominantBaseline="central"
+                                  fontSize="12px"
+                                  fontWeight="600"
+                                  fontFamily="system-ui, -apple-system, sans-serif"
+                                >
+                                  <tspan x={x} dy="-7">{shortName}</tspan>
+                                  <tspan x={x} dy="14" fontSize="11px" fill="#6b7280">
+                                    {percent ? (percent * 100).toFixed(1) : '0.0'}%
+                                  </tspan>
+                                </text>
+                              </g>
+                            );
+                          }}
+                          outerRadius={140}
+                          innerRadius={50}
+                          paddingAngle={5}
+                          dataKey="revenue"
+                          stroke="#ffffff"
+                          strokeWidth={5}
+                          filter="url(#pie3DShadow)"
+                          animationBegin={0}
+                          animationDuration={2000}
+                          animationEasing="ease-out"
+                        >
+                          {chartData.map((entry: any, index: number) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={`url(#pieGradient${(index % 5) + 1})`}
+                              filter="url(#pie3DGlow)"
+                              stroke="#ffffff"
+                              strokeWidth={4}
+                              className="pie-slice"
+                              style={{
+                                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                                transformOrigin: 'center',
+                                cursor: 'pointer',
+                                animationDelay: `${index * 0.15}s`,
+                                filter: 'url(#pie3DGlow) url(#pie3DLighting) url(#pie3DPerspective)',
+                                transform: `translateZ(${index * 3}px) perspective(1000px) rotateX(${index * 2}deg) rotateY(${index * 1}deg)`,
+                                transformStyle: 'preserve-3d'
+                              }}
+                              onMouseEnter={(e) => {
+                                const target = e.target as HTMLElement;
+                                target.style.transform = `scale(1.25) translateZ(${30 + index * 5}px) perspective(800px) rotateX(${index * 3}deg) rotateY(${index * 2}deg)`;
+                                target.style.filter = 'url(#pie3DGlow) url(#pie3DLighting) url(#pie3DPerspective) brightness(1.5) saturate(1.6)';
+                                target.style.zIndex = '25';
+                              }}
+                              onMouseLeave={(e) => {
+                                const target = e.target as HTMLElement;
+                                target.style.transform = `scale(1) translateZ(${index * 3}px) perspective(1000px) rotateX(${index * 2}deg) rotateY(${index * 1}deg)`;
+                                target.style.filter = 'url(#pie3DGlow) url(#pie3DLighting) url(#pie3DPerspective)';
+                                target.style.zIndex = '1';
+                              }}
+                            />
+                          ))}
+                        </Pie>
+                        
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                            border: 'none',
+                            borderRadius: '12px',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                            backdropFilter: 'blur(10px)',
+                            padding: '12px 16px'
+                          }}
+                          formatter={(value: any, name: string) => [
+                            `₵${value.toLocaleString()}`,
+                            '💰 Revenue'
+                          ]}
+                          labelFormatter={(label) => `🎯 ${label}`}
+                        />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
+                  )
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Payment Methods Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <PieChartIcon className="h-5 w-5 mr-2" />
+              Payment Methods Distribution
+            </CardTitle>
+            <CardDescription>
+              Distribution of successful payments by method
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 w-full">
+              {stats?.paymentMethodChart && stats.paymentMethodChart.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={stats.paymentMethodChart}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percentage }) => `${name} (${percentage}%)`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {stats.paymentMethodChart.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={`hsl(${index * 60}, 70%, 50%)`} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }}
+                      formatter={(value: any) => [value, 'Payments']}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <PieChartIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No payment data available</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Performance Metrics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Platform Performance
+              </CardTitle>
+              <CardDescription>
+                Key performance indicators and system health
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Payment Success Rate</span>
+                <Badge variant={stats?.paymentSuccessRate && stats.paymentSuccessRate > 95 ? 'default' : 'destructive'}>
+                  {stats?.paymentSuccessRate || 0}%
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Active Campaigns</span>
+                <Badge variant="secondary">
+                  {stats?.activeCampaigns || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Pending Approval</span>
+                <Badge variant={stats?.pendingCampaigns && stats.pendingCampaigns > 0 ? 'destructive' : 'secondary'}>
+                  {stats?.pendingCampaigns || 0}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Activity className="h-5 w-5 mr-2" />
+                Recent Activity
+              </CardTitle>
+              <CardDescription>
+                Latest platform activities and events
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats?.recentActivity?.slice(0, 5).map((activity) => (
+                  <div key={activity.id} className="flex items-start space-x-3">
+                    <div className={`mt-0.5 ${getActivityColor(activity.status)}`}>
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground">
+                        {activity.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                )) || (
+                  <div className="text-center py-4">
+                    <Clock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">No recent activity</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Votes Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Recent Votes
+            </CardTitle>
+            <CardDescription>
+              Latest voting activity across all campaigns
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="max-h-96 overflow-y-auto">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="sticky top-0 bg-background border-b">
+                    <tr>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Voter</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Campaign</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Nominee</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Amount</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats?.votesTable && stats.votesTable.length > 0 ? (
+                      stats.votesTable.slice(0, 20).map((vote) => (
+                        <tr key={vote.id} className="border-b hover:bg-muted/50 transition-colors">
+                          <td className="py-3 px-4 text-sm">
+                            <div className="font-medium">{vote.voterName}</div>
+                          </td>
+                          <td className="py-3 px-4 text-sm">
+                            <div className="max-w-[200px] truncate" title={vote.campaignTitle}>
+                              {vote.campaignTitle}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm">
+                            <div className="max-w-[150px] truncate" title={vote.nomineeName}>
+                              {vote.nomineeName}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm font-medium">
+                            ₵{vote.amount.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-sm">
+                            <Badge 
+                              variant={vote.status === 'SUCCESS' ? 'default' : vote.status === 'PENDING' ? 'secondary' : 'destructive'}
+                              className="text-xs"
+                            >
+                              {vote.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">
+                            {new Date(vote.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                          <Users className="h-8 w-8 mx-auto mb-2" />
+                          <p>No votes found</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>
+              Common administrative tasks and shortcuts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                <Megaphone className="h-6 w-6 mb-2" />
+                <span>Manage Campaigns</span>
+              </Button>
+              <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                <Users className="h-6 w-6 mb-2" />
+                <span>User Management</span>
+              </Button>
+              <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                <DollarSign className="h-6 w-6 mb-2" />
+                <span>Financial Reports</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        </div>
+      </AdminLayout>
+    </AdminProtectedRoute>
+  )
+}
